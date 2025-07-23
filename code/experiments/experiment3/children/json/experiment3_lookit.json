@@ -1,0 +1,598 @@
+{
+    "frames": {
+        "video-config": {
+            "kind": "exp-video-config",
+            "troubleshootingIntro": "If you're having any trouble or would like us to walk you through setup, please email our researcher Siying Zhang at syzhang6@stanford.edu."
+        },
+        "video-consent": {
+            "gdpr": false,
+            "kind": "exp-lookit-video-consent",
+            "template": "consent_002",
+            "PIName": "Hyowon Gweon, Tobias Gerstenberg",
+            "PIContact": "Hyowon Gweon(contact:sociallearninglab@stanford.edu), Tobias Gerstenberg(gerstenberg@stanford.edu)",
+            "institution": "Stanford University",
+            "purpose": "We want to understand how children think about different outcomes when faced with a situation where one outcome is clearly worse than the other. We aim to determine whether children can use counterfactual reasoning to predict what might have happened if someone hadn't helped Granny. For example, if no one had caught the glass before it hit the ground, it would have fallen and broken into pieces. We believe that children who can imagine these alternative outcomes will understand that it's worse for the glass to fall onto the floor than onto a soft and fluffy bean bag, and they will thank the friend who caught the glass that was about to fall onto the floor. Previous research has shown that children's ability to do this develops gradually with age and cognitive development. Younger children may struggle to consider alternative outcomes, whereas older children tend to make more accurate judgments of counterfactual situations. Through this research, we hope to gain insights into how children think about other people's actions and how they make judgments about what could have happened.",
+            "procedures": "In this game, your child will be introduced to our main character -- Granny, who is clumsy and often drops the objects that she holds. Luckily, Granny has some friends to help catch the stuff that she drops. Then your child will be asked who should Granny give the thank-you sticker to.",
+            "payment": "There are no costs to participating. There are also no known risks associated with this game beyond those of everyday life. Although this game will not benefit your child directly, it will add to our understanding of how children think in general. After you finish the game, we will email you a $5 Amazon.com gift card within a week. To be eligible for the gift card your child must be in the age range for this game, you need to submit a valid consent statement and your child needs to be visible during game. But we will send a gift card even if you do not finish the whole game or we are not able to use your child's data. There are no other direct benefits to you or your child from participating, but we hope you will enjoy the experience.",
+            "datause": "We use a secure, web-based data library called Box to store your data. All data is private so that only members of the research team can access it. A research assistant will watch your video and mark down your child's answer to the question at the end of the story, and as well as other information such as interactions between you and your child during the story. You will choose a privacy level that says whether researchers can share the videos more broadly, for instance to teach students. Whether to share data is completely up to you!",
+            "research_rights_statement": "This research has been reviewed and approved by an Institutional Review Board (“IRB”), a group of people who oversee research involving humans as participants. Information to help you understand research is on-line at https://templatestudiesinstitute.edu/irb. You may talk to a IRB staff member at (123) 456-7890 or IRBAdmin@tsi.edu for any of the following: 1) Your questions, concerns, or complaints are not being answered by the research team; 2) you cannot reach the research team; 3) you want to talk to someone besides the research team; 4) you have questions about your rights as a research subject; 5) you want to get information or provide input about this research."
+        },
+        "before-we-get-started": {
+            "kind": "exp-lookit-images-audio",
+            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+            "id": "storybook-group",
+            "audioTypes": [
+                "mp3",
+                "ogg"
+            ],
+            "autoProceed": false,
+            "doRecording": false,
+            "displayFullscreen": true,
+            "nextButtonText": "Getting in position",
+            "audio": "experiment3_granny_before_we_get_started",
+            "images": [
+                {
+                    "id": "storybookIllustration",
+                    "src": "experiment3_granny_before_we_get_started.jpeg",
+                    "top": 0,
+                    "left": 0,
+                    "width": 120
+                }
+            ]
+        },
+        "get-your-child": {
+            "kind": "exp-lookit-images-audio",
+            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+            "id": "storybook-group",
+            "audioTypes": [
+                "mp3",
+                "ogg"
+            ],
+            "autoProceed": false,
+            "audio": "experiment3_granny_time_to_get_child",
+            "doRecording": false,
+            "images": [
+                {
+                    "id": "storybookIllustration",
+                    "src": "experiment3_get_your_child.jpeg",
+                    "position": "fill"
+                }
+            ]
+        },
+        "positioning-config": {
+            "kind": "exp-video-config-quality",
+            "title": "It's time to get your child and get in position!",
+            "introText": "",
+            "showRecordMenu": false,
+            "requireTestVideo": false,
+            "completedItemText": "Got it!",
+            "instructionBlocks": [
+                {
+                    "title": "Center your webcam if needed",
+                    "text": "<strong>Make sure the webcam you're using is roughly centered</strong> relative to this monitor. This makes it much easier for us to see your video.",
+                    "image": {
+                        "src": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children/img/centering.jpeg",
+                        "alt": "Example images of using centered external webcam on monitor or built-in webcam on laptop."
+                    }
+                },
+                {
+                    "title": "Make sure you can clearly see your child's face",
+                    "text": "Take a few moments to get settled and make sure your child's face is clearly visible in the webcam preview to the right. You may need to adjust the webcam angle or turn on a light to make sure his or her face is visible."
+                },
+                {
+                    "text": "The green button down below will start the game. Press the button once you and your child are ready to go!",
+                    "title": "When you're ready"
+                }
+            ],
+            "requireItemConfirmation": true,
+            "recordingInstructionText": ""
+        },
+        "start-recording-with-image": {
+            "kind": "exp-lookit-start-recording",
+            "baseDir": "https://www.mit.edu/~kimscott/placeholderstimuli/",
+            "videoTypes": [
+                "webm",
+                "mp4"
+            ],
+            "image": "peekaboo_remy.jpg",
+            "imageAnimation": "spin",
+            "displayFullscreen": true
+        },
+        "child-video-assent": {
+            "kind": "exp-lookit-video-assent",
+            "pages": [
+                {
+                    "imgSrc": "experiment3_do_you_want_to_play.jpeg",
+                    "textBlocks": [
+                        {
+                            "text": "Thanks for coming! Today, you will meet Granny and watch stories about Granny and her friends. Are you ready to start the game?"
+                        }
+                    ],
+                    "audio": "experiment3_child_consent_granny",
+                    "type": "audio/mp3"
+                }
+            ],
+            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+            "videoTypes": [
+                "webm",
+                "mp4"
+            ],
+            "participationQuestion": "Do you want to participate in this game?",
+            "minimumYearsToAssent": 3
+        },
+        "introduction": {
+            "kind": "exp-lookit-images-audio",
+            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+            "id": "storybook-group",
+            "audioTypes": [
+                "mp3",
+                "ogg"
+            ],
+            "autoProceed": false,
+            "doRecording": false,
+            "audio": "experiment3_granny_welcome",
+            "position": "fill",
+            "images": [
+                {
+                    "id": "storybookIllustration",
+                    "src": "experiment3_granny_welcome.jpeg",
+                    "position": "fill"
+                }
+            ]
+        },
+        "world-building": {
+            "kind": "group",
+            "frameList": [
+                {
+                    "kind": "exp-lookit-images-audio",
+                    "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                    "id": "storybook-group",
+                    "audioTypes": [
+                        "mp3",
+                        "ogg"
+                    ],
+                    "autoProceed": true,
+                    "doRecording": false,
+                    "audio": "experiment3_get_started",
+                    "images": [
+                        {
+                            "id": "storybookIllustration",
+                            "src": "experiment3_do_you_want_to_play.jpeg",
+                            "top": 10,
+                            "left": 15,
+                            "width": 80
+                        }
+                    ]
+                },
+                {
+                    "kind": "exp-lookit-video",
+                    "video": {
+                        "position": "fill",
+                        "source": "experiment3_by_plant"
+                    },
+                    "backgroundColor": "black",
+                    "showProgressBar": true,
+                    "autoProceed": false,
+                    "requireVideoCount": 1,
+                    "doRecording": false,
+                    "restartAfterPause": true,
+                    "pauseText": "Game Paused. Press spacebar to resume.",
+                    "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children"
+                },
+                {
+                    "kind": "exp-lookit-video",
+                    "video": {
+                        "position": "fill",
+                        "source": "experiment3_by_lamp"
+                    },
+                    "backgroundColor": "black",
+                    "showProgressBar": true,
+                    "autoProceed": false,
+                    "requireVideoCount": 1,
+                    "doRecording": false,
+                    "restartAfterPause": true,
+                    "pauseText": "Game Paused. Press spacebar to resume.",
+                    "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children"
+                }
+            ],
+            "commonFrameProperties": {
+                "kind": "exp-lookit-video",
+                "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                "audioTypes": [
+                    "mp3"
+                ],
+                "videoTypes": [
+                    "mp4"
+                ],
+                "parentTextBlock": {
+                    "css": {
+                        "font-size": "1.3em",
+                        "background-color": "#f8f3bf"
+                    },
+                    "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                    "title": "For Parents"
+                },
+                "requireVideoCount": 1,
+                "doRecording": false,
+                "restartAfterPause": true,
+                "showReplayButton": true,
+                "showProgressBar": true,
+                "pauseText": "Game Paused. Press spacebar to resume.",
+                "backgroundColor": "white",
+                "autoProceed": false,
+                "showWaitForRecordingMessage": true,
+                "showWaitForUploadMessage": true,
+                "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                "waitForUploadMessage": "Please wait... <br><br> uploading video"
+            }
+        },
+        "study-design": {
+            "kind": "group",
+            "frameList": [
+                {
+                    "kind": "group",
+                    "frameList": [
+                        {
+                            "kind": "choice",
+                            "sampler": "random-parameter-set",
+                            "frameList": [
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#0"
+                                    }
+                                },
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#1"
+                                    }
+                                },
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#2"
+                                    }
+                                },
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#3"
+                                    }
+                                },
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#4"
+                                    }
+                                },
+                                {
+                                    "kind": "group",
+                                    "frameList": [
+                                        {
+                                            "kind": "exp-lookit-video",
+                                            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                                            "video": {
+                                                "position": "fill",
+                                                "source": "ITEM_VIDEO_LIST#UNIQ"
+                                            },
+                                            "parentTextBlock": {
+                                                "css": {
+                                                    "font-size": "1.3em",
+                                                    "background-color": "#f8f3bf"
+                                                },
+                                                "text": "Please remind your child to say the answers out loud.\n Make sure not to interfere with your child's answers. Thank you!",
+                                                "title": "For Parents"
+                                            },
+                                            "requireVideoCount": 1,
+                                            "doRecording": false,
+                                            "restartAfterPause": true,
+                                            "pauseText": "Game Paused. Press spacebar to resume.",
+                                            "backgroundColor": "white",
+                                            "showProgressBar": true,
+                                            "autoProceed": false,
+                                            "showReplayButton": true,
+                                            "showWaitForRecordingMessage": true,
+                                            "showWaitForUploadMessage": true,
+                                            "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                                            "waitForUploadMessage": "Please wait... <br><br> uploading video"
+                                        }
+                                    ],
+                                    "parameters": {
+                                        "ITEM_VIDEO_LIST": "STIM_VIDEOS#5"
+                                    }
+                                }
+                            ],
+                            "parameterSets": [
+                                {
+                                    "STIM_VIDEOS": "STIM_VIDEOS_CANDS#PERM"
+                                }
+                            ]
+                        }
+                    ],
+                    "parameters": {
+                        "STIM_VIDEOS_CANDS": [
+                            "GLASS",
+                            "BASKETBALL",
+                            "LIGHTBULB",
+                            "ROCK",
+                            "BEAR",
+                            "APPLE"
+                        ]
+                    }
+                }
+            ],
+            "parameters": {
+                "APPLE": [
+                    "experiment3_apple_trashcan_correct_left_lily",
+                    "experiment3_apple_trashcan_correct_right_alex"
+                ],
+                "BASKETBALL": [
+                    "experiment3_basketball_egg_correct_left_charlie",
+                    "experiment3_basketball_egg_correct_right_noah"
+                ],
+                "BEAR": [
+                    "experiment3_bear_water_correct_left_vicky",
+                    "experiment3_bear_water_correct_right_connor"
+                ],
+                "LIGHTBULB": [
+                    "experiment3_lightbulb_laundry_correct_left_jessie",
+                    "experiment3_lightbulb_laundry_correct_right_caleb"
+                ],
+                "GLASS": [
+                    "experiment3_glass_beanbag_correct_left_emily",
+                    "experiment3_glass_beanbag_correct_right_lucas"
+                ],
+                "ROCK": [
+                    "experiment3_rock_wine_correct_left_amber",
+                    "experiment3_rock_wine_correct_right_billy"
+                ]
+            },
+            "commonFrameProperties": {
+                "kind": "exp-lookit-video",
+                "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+                "audioTypes": [
+                    "mp3"
+                ],
+                "videoTypes": [
+                    "mp4"
+                ],
+                "parentTextBlock": {
+                    "css": {
+                        "font-size": "1.3em",
+                        "background-color": "#f8f3bf"
+                    },
+                    "text": "Please remind your child to say the answers out loud. Make sure not to interfere with your child's answers. Thank you!",
+                    "title": "For Parents"
+                },
+                "requireVideoCount": 1,
+                "doRecording": false,
+                "restartAfterPause": true,
+                "pauseText": "Game Paused. Press spacebar to resume.",
+                "backgroundColor": "white",
+                "showProgressBar": true,
+                "autoProceed": false,
+                "showReplayButton": true,
+                "showWaitForRecordingMessage": true,
+                "showWaitForUploadMessage": true,
+                "waitForRecordingMessage": "Please wait... <br><br> starting webcam recording",
+                "waitForUploadMessage": "Please wait... <br><br> uploading video"
+            }
+        },
+        "study-completion": {
+            "kind": "exp-lookit-images-audio",
+            "baseDir": "https://raw.githubusercontent.com/davdrose/counterfactuals_dev/refs/heads/main/code/experiments/experiment3/children",
+            "id": "storybook-group",
+            "audioTypes": [
+                "mp3",
+                "ogg"
+            ],
+            "autoProceed": false,
+            "doRecording": false,
+            "displayFullscreen": true,
+            "parentTextBlock": {
+                "css": {
+                    "font-size": "1.3em",
+                    "background-color": "#f8f3bf"
+                },
+                "text": "Thank you very much for your participation. We look forward to seeing you with more research games in the future. ",
+                "title": "For parents"
+            },
+            "audio": "experiment3_granny_end",
+            "images": [
+                {
+                    "id": "storybookIllustration",
+                    "src": "experiment3_granny_end.jpeg",
+                    "top": 0,
+                    "left": 0,
+                    "width": 120
+                }
+            ]
+        },
+        "stop-recording-with-image": {
+            "kind": "exp-lookit-stop-recording",
+            "baseDir": "https://www.mit.edu/~kimscott/placeholderstimuli/",
+            "videoTypes": [
+                "webm",
+                "mp4"
+            ],
+            "image": "peekaboo_remy.jpg",
+            "imageAnimation": "spin",
+            "displayFullscreen": true,
+            "showProgressBar": true,
+            "waitForUploadMessage": " "
+        },
+        "exit-survey": {
+            "kind": "exp-lookit-exit-survey",
+            "debriefing": {
+                "text": "In this study, we presented six scenarios where two of Granny's friends provided assistance in each scenario. The participants were then asked to identify which friend Granny would give her thank-you sticker to. We wanted to see how children judge the helpfulness of others in different situations. We were curious if children could imagine what might have happened if nobody helped Granny. For example, if no one had caught the glass before it hit the ground, it would have fallen and broken into pieces. We believe that children who can imagine these alternative outcomes will understand that it's worse for the glass to fall onto the floor than onto a soft and fluffy bean bag, and they will thank the friend who caught the glass that was about to fall onto the floor. We didn't give explicit information about what the characters intended or what the outcomes would be. Instead, we presented scenarios that made the children imagine what could have happened if someone hadn't helped. We predict that the judgments would be made based on the extent to which each friend prevented negative outcomes. Although children’s answers can vary, there aren’t any “right” or “wrong” answers to the questions. We are just interested in looking at the average responses from children and we won’t take any specific answers as “good” or “bad”.  \n\n If you are interested in learning more about this, please see the following experimental paper as <a href='https://cicl.stanford.edu/papers/bridgers2020granny.pdf' target='_blank' rel='noopener'>here</a>. \n\n Thank you again for your participation! Gift cards will be sent within one week of game completion. Please note that we only offer Amazon.com gift card at this time, thanks for your understanding!",
+                "title": "Thank you!"
+            }
+        }
+    },
+    "sequence": [
+        "video-config",
+        "video-consent",
+        "before-we-get-started",
+        "get-your-child",
+        "positioning-config",
+        "start-recording-with-image",
+        "child-video-assent",
+        "introduction",
+        "world-building",
+        "study-design",
+        "study-completion",
+        "stop-recording-with-image",
+        "exit-survey"
+    ]
+}

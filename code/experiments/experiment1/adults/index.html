@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title> Experiment </title>
+
+    <link rel="stylesheet" href='css/jspsych.css' />
+    <link rel="stylesheet" href='css/jquery-ui-edit.css' />
+    <style>
+        .video-container {
+            width: 400px;
+            height: 300px;
+        }
+    </style>
+
+    <script src='js/jquery.min.js'></script>
+    <script src='js/jquery-ui.min.js'></script>
+    <script src='https://proliferate.alps.science/static/js/proliferate.js'></script>
+
+    <script src='js/jspsych.js'></script>
+    <script src='js/plugin-instructions.js'></script>
+    <script src='js/plugin-html-button-response.js'></script>
+    <script src='js/plugin-survey-multi-choice.js'></script>
+    <script src='js/plugin-survey-html-form.js'></script>
+    <script src='js/plugin-preload.js'></script>
+    <script src="js/plugin-audio-button-response.js"></script>
+    <script src='js/plugin-video-button-response-custom.js'></script>
+
+    <script src='js/consent.js'></script>
+    <script src='js/feedback-demographics.js'></script>
+    <script src='js/utils.js'></script>
+
+</head>
+
+</body>
+</body>
+
+<script>
+
+    // -----------------------------------------------------
+    // initialize jsPsych
+    // -----------------------------------------------------
+    const jsPsych = initJsPsych({
+        show_progress_bar: true,
+        auto_update_progress_bar: false,
+        on_finish: () => {
+            let responseData = {};
+            jsPsych.data.displayData();
+
+            for (const warmupPage of jsPsych.data.get().filter({ "page_type": "warmup" }).values()) {
+                // console.log(warmupPage);
+                const warmupVideo = warmupPage.video;
+                responseData[`${warmupVideo}_response`] = warmupPage.buttonLabels[warmupPage["response"]];
+                // console.log(responseData)
+            };
+
+            for (const testPage of jsPsych.data.get().filter({ "page_type": "test_trials" }).values()) {
+                // console.log(testPage);
+                const testVideo = testPage.video;
+                const idx = testPage["idx"] + 1;
+                const correctAns = testPage.correct;
+                responseData[`video_${idx}`] = testVideo;
+                responseData[`video_${idx}_correct_answer`] = correctAns;
+                responseData[`video_${idx}_response`] = testPage.buttonLabels[testPage["response"]]
+                // console.log(responseData)
+            };
+
+            for (const postTestPage of jsPsych.data.get().filter({ "page_type": "post_test" }).values()) {
+                // console.log(postTestPage);
+                const postTestVideo = postTestPage.video;
+                responseData["post_test_trial"] = postTestVideo["correct"];
+                responseData["post_test_response"] = postTestPage.buttonLabels[postTestPage["response"]]
+            };
+
+
+            //Demographics
+
+            let feedback = jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].feedback
+
+            let gender = jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].gender
+            if (!gender && jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].other_gender) {
+                gender = "other_gender"
+            }
+            let age = parseInt(jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].age)
+
+            let race = jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].race
+
+            if (!race && jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].other_race) {
+                race = "other_race"
+            }
+
+            let ethnicity = jsPsych.data.get().filter({ "page_type": "participant_survey" }).values()[0]["response"].ethnicity
+
+            let demographics = {
+                "feedback": feedback,
+                "age": age,
+                "gender": gender,
+                "race": race,
+                "ethnicity": ethnicity
+            }
+
+            let data_final = {
+                "responses": responseData,
+                "participants": demographics,
+            }
+            // console.log(data_final);
+
+            // submit
+            proliferate.submit(data_final);
+
+            $('#jspsych-content').css('margin-top', 'auto');
+            $('#jspsych-content').html('<div style="margin: auto;"> <p>' +
+                ' Thank you for participating in this experiment! </p>' +
+                '<p> Redirecting you back to Prolific... </p>');
+            setTimeout(function () { }, 200);
+        }
+    });
+
+
+
+    // -----------------------------------------------------
+    // intro
+    // -----------------------------------------------------
+
+    const intro_1 = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+            `<h1><b>Welcome!</b></h1><div style="text-align:justify; padding:20px; max-width:900px;">
+        <p>In this study, your will watch short video clips of a person dropping things. After each video, you will be asked a question.</p>
+        <p>This is a study <b>originally designed for children</b>. Here, we interested in seeing what adults think.</p>
+        </div>
+        <h3>Please click next to proceed.<h3>`,
+        choices: ['Next'],
+        on_finish: function () {
+            var prog = jsPsych.getProgressBarCompleted();
+            jsPsych.setProgressBar(prog + 0.05);
+        }
+    };
+
+
+    // -----------------------------------------------------
+    // audio check 
+    // -----------------------------------------------------
+
+    const audio_instruct = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div style="text-align:justify; padding:20px; max-width:900px;">
+            <p>Since this experiment uses audio, you will first do a quick sound check.</p>
+            <p>Please make sure that the <b>sound</b> on your computer <b>is turned on.</p></b>
+            </div>
+        <h3>When you are ready to begin the sound check, click start.<h3>`,
+        choices: ['Start'],
+        on_finish: function () {
+            var prog = jsPsych.getProgressBarCompleted();
+            jsPsych.setProgressBar(prog + 0.05);
+        }
+    };
+
+  
+    let audio_files = ["audio/c.mp3", "audio/d.mp3", "audio/g.mp3"]
+
+    let loop_iteration = 0;
+
+const audio_check = {
+    timeline: audio_files.map((audio_file, index) => {
+        return {
+            type: jsPsychAudioButtonResponse,
+            stimulus: audio_file,
+            choices: ['C', 'D', 'G'],
+            prompt: "<p>Which sound did you hear?</p>",
+            response_ends_trial: true,
+            response_allowed_while_playing: false,
+            on_finish: function(data){
+                // console.log(data);
+                data.loop_iteration = loop_iteration;
+                data.correct = (data.response == index);
+            }
+        };
+    })
+}
+
+const audio_fail = {
+    timeline: [{
+        type: jsPsychHtmlButtonResponse,
+        stimulus: 'Unfortunately, you missed some of the audio check ' +
+            'questions.</p> <p> Please review the instructions again and check that your sound is on and working properly.',
+        choices: ['Review'],
+    }],
+    conditional_function: function(){
+        var data = jsPsych.data.get().filter({trial_type: 'audio-button-response', loop_iteration: loop_iteration}).values();
+        return data.some(trial => !trial.correct);
+    }
+}
+
+const loop_node = {
+    timeline: [
+        audio_instruct,
+        audio_check,
+        audio_fail
+    ],
+    loop_function: function(data){
+        var data = jsPsych.data.get().filter({trial_type: 'audio-button-response', loop_iteration: loop_iteration}).values();
+        loop_iteration++;
+        return data.some(trial => !trial.correct);
+    }
+}
+
+    // -----------------------------------------------------
+    // instructions to start experiment
+    // -----------------------------------------------------
+
+    const intro_2 = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+        `<div style="text-align:justify; padding:20px; max-width:900px;">
+            <p>Now that you have completed the sound check, you are ready to begin.</p>
+            </div>
+        <h3>To begin the experiment, click start.<h3>`,
+        choices: ['Start'],
+        on_finish: function () {
+            var prog = jsPsych.getProgressBarCompleted();
+            jsPsych.setProgressBar(prog + 0.05);
+        }
+    };
+
+
+    // -----------------------------------------------------
+    // warmup
+    // -----------------------------------------------------
+
+    // create warmup trials
+    const comp = {
+        "plant": {
+            "choices": ["Benji", "Harry"],
+            "video": "videos/by_plant.mp4",
+        },
+        "lamp": {
+            "choices": ["Benji", "Harry"],
+            "video": "videos/by_lamp.mp4",
+        },
+    }
+
+    // create an array of video paths from the selected trials
+    const compToPreload = [comp.plant.video,
+    comp.lamp.video,]
+
+    // preload only the videos from the selected trials
+    const preload_intro = {
+        type: jsPsychPreload,
+        video: compToPreload
+    };
+
+
+    const warmup = {
+        timeline: [
+            {
+                type: jsPsychVideoButtonResponse,
+                stimulus: [comp.plant.video],
+                choices: comp.plant.choices,
+                class: "video-container",
+                height: "75%",
+                width: "80%",
+                controls: false,
+                response_ends_trial: true,
+                response_allowed_while_playing: false,
+                data: {
+                    "page_type": "warmup",
+                    buttonLabels: comp.plant.choices,
+                    video: "plant"
+                },
+            },
+            {
+                type: jsPsychVideoButtonResponse,
+                stimulus: [comp.lamp.video],
+                choices: comp.lamp.choices,
+                class: "video-container",
+                height: "75%",
+                width: "80%",
+                controls: false,
+                response_ends_trial: true,
+                response_allowed_while_playing: false,
+                data: {
+                    "page_type": "warmup",
+                    buttonLabels: comp.plant.choices,
+                    video: "lamp"
+                }
+            }
+        ]
+    };
+
+
+
+
+    // -----------------------------------------------------
+    // experiment trials
+    // -----------------------------------------------------
+
+    //define trials
+
+    const trial = {
+        "version_1": {
+            "egg_ball": {
+                "choices": ["Emily", "Andy"],
+                "correct": "Andy",
+                "video": "videos/andy_correct_right_emily.mp4",
+            },
+            "phone_duck": {
+                "choices": ["Zoey", "Taylor"],
+                "correct": "Zoey",
+                "video": "videos/zoey_correct_left_taylor.mp4",
+            },
+            "icecream_sunscreen": {
+                "choices": ["Olivia", "Mason"],
+                "correct": "Olivia",
+                "video": "videos/olivia_correct_left_mason.mp4",
+            },
+            "vase_bear": {
+                "choices": ["Sara", "Leo"],
+                "correct": "Leo",
+                "video": "videos/leo_correct_right_sara.mp4",
+            },
+        },
+        "version_2": {
+            "egg_ball": {
+                "choices": ["Andy", "Emily"],
+                "correct": "Emily",
+                "video": "videos/emily_correct_right_andy.mp4",
+            },
+            "phone_duck": {
+                "choices": ["Taylor", "Zoey"],
+                "correct": "Taylor",
+                "video": "videos/taylor_correct_left_zoey.mp4",
+            },
+            "icecream_sunscreen": {
+                "choices": ["Mason", "Olivia"],
+                "correct": "Mason",
+                "video": "videos/mason_correct_left_olivia.mp4",
+            },
+            "vase_bear": {
+                "choices": ["Leo", "Sara"],
+                "correct": "Sara",
+                "video": "videos/sara_correct_right_leo.mp4",
+            },
+        },
+        "version_3": {
+            "egg_ball": {
+                "choices": ["Andy", "Emily"],
+                "correct": "Andy",
+                "video": "videos/andy_correct_left_emily.mp4",
+            },
+            "phone_duck": {
+                "choices": ["Taylor", "Zoey"],
+                "correct": "Zoey",
+                "video": "videos/zoey_correct_right_taylor.mp4",
+            },
+            "icecream_sunscreen": {
+                "choices": ["Mason", "Olivia"],
+                "correct": "Olivia",
+                "video": "videos/olivia_correct_right_mason.mp4",
+            },
+            "vase_bear": {
+                "choices": ["Leo", "Sara"],
+                "correct": "Leo",
+                "video": "videos/leo_correct_left_sara.mp4",
+            },
+        },
+        "version_4": {
+            "egg_ball": {
+                "choices": ["Emily", "Andy"],
+                "correct": "Emily",
+                "video": "videos/emily_correct_left_andy.mp4",
+            },
+            "phone_duck": {
+                "choices": ["Zoey", "Taylor"],
+                "correct": "Taylor",
+                "video": "videos/taylor_correct_right_zoey.mp4",
+            },
+            "icecream_sunscreen": {
+                "choices": ["Olivia", "Mason"],
+                "correct": "Mason",
+                "video": "videos/mason_correct_right_olivia.mp4",
+            },
+            "vase_bear": {
+                "choices": ["Sara", "Leo"],
+                "correct": "Sara",
+                "video": "videos/sara_correct_left_leo.mp4",
+            },
+        },
+    }
+
+    // shuffle the order of the trial versions
+    const trial_version = jsPsych.randomization.shuffle(["version_1", "version_2", "version_3", "version_4"])[0];
+
+    // get the trials in the selected version
+    const trials_selected = trial[trial_version];
+
+    // shuffle the trials within the selected version
+    const shuffled_trials = jsPsych.randomization.shuffle(["egg_ball", "phone_duck", "icecream_sunscreen", "vase_bear"]);
+
+    // create an array of video paths from the selected trials
+    const videosToPreload = shuffled_trials.map(trial => trials_selected[trial].video);
+
+    // preload only the videos from the selected trials
+    const preload = {
+        type: jsPsychPreload,
+        video: videosToPreload
+    };
+
+
+    const trials = {
+        timeline: shuffled_trials.map(trialName => {
+            const trial = trials_selected[trialName];
+            return {
+                type: jsPsychVideoButtonResponse,
+                stimulus: [trial.video],
+                choices: trial.choices,
+                class: "video-container",
+                height: "80%",
+                width: "80%",
+                controls: false,
+                response_ends_trial: true,
+                response_allowed_while_playing: false,
+                data: {
+                    "page_type": "test_trials",
+                    buttonLabels: trial.choices,
+                    video: trialName,
+                    correct: trial.correct,
+                    idx: shuffled_trials.indexOf(trialName)
+                }
+            };
+        })
+    };
+    // console.log(trials);
+
+    // -----------------------------------------------------
+    // post-trial
+    // -----------------------------------------------------
+
+    const post = {
+        "michael_left": {
+            "choices": ["Michael", "Vicky"],
+            "correct": "michael_correct",
+            "video": "videos/michael_correct_left.mp4",
+        },
+        "michael_right": {
+            "choices": ["Vicky", "Michael"],
+            "correct": "vicky_correct",
+            "video": "videos/vicky_correct_left.mp4",
+        },
+    }
+
+    // shuffle the order of the post trial versions
+    const post_version = jsPsych.randomization.shuffle(["michael_left", "michael_right"])[0];
+
+    // select the post trial based on the shuffled version
+    const post_trial = post[post_version];
+
+
+    // preload selected post trial video
+    const postToPreload = [post_trial.video]
+
+    // preload only the videos from the selected trials
+    const preload_post = {
+        type: jsPsychPreload,
+        video: postToPreload
+    };
+
+    let postTrialData = [];
+
+    const posttrial = {
+        timeline: [
+            {
+                type: jsPsychVideoButtonResponse,
+                stimulus: [post_trial.video],
+                choices: post_trial.choices,
+                height: "76%",
+                width: "80%",
+                controls: false,
+                response_ends_trial: true,
+                response_allowed_while_playing: false,
+                data: {
+                    "page_type": "post_test",
+                    buttonLabels: post_trial.choices,
+                    video: post_trial
+                }
+            }
+        ]
+    };
+
+
+
+    // -----------------------------------------------------
+    // compile everything
+    // -----------------------------------------------------
+    var timeline = [];
+    timeline.push(consent);
+    timeline.push(intro_1);
+    timeline.push(loop_node);
+    timeline.push(intro_2);
+    timeline.push(warmup);
+    timeline.push(trials);
+    timeline.push(posttrial);
+    timeline.push(feedback_demographics);
+
+
+    // -----------------------------------------------------
+    // run timeline
+    // -----------------------------------------------------
+    jsPsych.run(timeline);
+
+</script>
+
+</html>

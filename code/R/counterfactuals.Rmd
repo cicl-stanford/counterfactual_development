@@ -1,0 +1,1517 @@
+---
+title: "Counterfactual thought without counterfactual langauge"
+author: "David Rose, Siying Zhang, Sophie Bridgers, Hyowon Gweon, Tobias Gerstenberg"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+    theme: cosmo
+    highlight: tango
+---
+
+# Load packages
+
+```{r setup, include = F, message = F, warning = F}
+library("xtable")         # for saving tables
+library("emmeans")        # for comparing means
+library("knitr")          # for knitting  
+library("brms")           # for Bayesian data analysis
+library("tinytable")      # for tidy tables
+library("broom.mixed")    # for tidy model results
+library("boot")           # for inv.logit() function
+library("DT")             # for datatable() function 
+library("RColorBrewer")   # for color palettes
+library("Hmisc")          # for smean.cl.boot function
+library("png")            # adding pngs to images
+library("egg")            # for geom_custom
+library("grid")           # functions for dealing with images 
+library("magick")         # read in images 
+library("patchwork")      # for combining plots
+library("tidyverse")      # for everything else 
+```
+
+# Settings
+```{r}
+opts_chunk$set(echo = T, warning = F, message = F)
+
+# Define a custom color palette
+children_palette = brewer.pal(n = 9, name = "Greens")[-1]
+adults_palette = "grey"
+colors = c(children_palette, adults_palette)
+
+# set theme 
+theme_set(theme_classic())
+
+# suppress grouping warning 
+options(dplyr.summarise.inform = F)
+```
+
+
+# Helper functions
+
+## Demographics for children
+```{r}
+print_demographics = function(data) {
+  # gender
+  data %>%
+    group_by(gender) %>%
+    summarise(n = n_distinct(participant)) %>%
+    print()
+  
+  # age
+  print('age:')
+  mean(data$age, na.rm = T) %>% print()
+  sd(data$age, na.rm = T) %>% print()
+  
+  # language spoken
+ data %>%
+    mutate(en_occurrence = ifelse(str_detect(lan_spoken, "en"), "en", "non-en")) %>%
+    group_by(en_occurrence) %>%
+    summarise(n = n_distinct(participant)) %>%
+    print()
+
+}
+
+```
+
+
+## Demographics for adults
+```{r}
+print_demographics_adults = function(data) {
+  # gender
+  data %>%
+    group_by(gender) %>%
+    summarise(n = n()) %>%
+    print()
+  
+  # age
+  print('age:')
+  mean(data$age, na.rm = T) %>% print()
+  sd(data$age, na.rm = T) %>% print()
+
+# race
+  data %>%
+    group_by(race) %>%
+    summarise(n = n()) %>%
+    print()
+  
+}
+
+```
+
+# EXPERIMENT 1 
+## CHILDREN
+### DATA
+#### Read in Data
+
+```{r message=FALSE, warning=FALSE}
+
+df.exp1_children = read_csv("../../data/experiment1/children/exp1_children.csv") %>%
+  filter(row_number() >= 0 & row_number() <= 120) %>% 
+  select(age, gender, lan_spoken, trial_1, trial_1_score, trial_2, trial_2_score, trial_3, trial_3_score, trial_4, trial_4_score, control_trial_score, total_score) %>%
+  mutate(age_group = cut(age, breaks = c(3, 4, 5, 6, 7.1),
+                         labels = c("3", "4", "5", "6"),
+                         right = TRUE)) %>%
+  # na.omit() %>%
+  mutate(participant = 1:n(),
+         total_score = as.numeric(total_score),
+        across("trial_1"|"trial_2"|"trial_3"|"trial_4", ~case_when(
+    grepl("(andy|emily)_correct_(left|right)_(andy|emily)", .) ~ "egg | basketball",
+    grepl("(taylor|zoey)_correct_(left|right)_(taylor|zoey)", .) ~ "phone | rubberducky",
+    grepl("(sara|leo)_correct_(left|right)_(sara|leo)", .) ~ "vase | toybear",
+    grepl("(olivia|mason)_correct_(left|right)_(olivia|mason)", .) ~ "icecream | sunscreen",
+    TRUE ~ .
+  ))) %>%
+  mutate(across(starts_with("trial"), as.character)) %>%
+  pivot_longer(cols = c("trial_1", "trial_2", "trial_3", "trial_4"),
+               names_to = "trial_order",
+               values_to = "trial_name") %>%
+  group_by(participant) %>%
+  mutate(trial_score = case_when(
+    trial_order == "trial_1" ~ trial_1_score,
+    trial_order == "trial_2" ~ trial_2_score,
+    trial_order == "trial_3" ~ trial_3_score,
+    trial_order == "trial_4" ~ trial_4_score,
+  )) %>%
+  mutate(trial_score = as.numeric(trial_score),
+         trial_order = str_replace(trial_order, "_", " ")) %>%
+  select(participant, gender, lan_spoken, age, age_group, trial_order, trial_name, trial_score, total_score, control_trial_score) %>% 
+  ungroup()
+```
+
+#### Demographics
+```{r}
+
+print_demographics(df.exp1_children)
+
+```
+
+### STATS
+##### Bayesian Regression Models
+###### Hypothesis 1 
+```{r}
+
+# Overall children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+fit.brm1 = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
+     data = df.exp1_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm1") 
+
+fit.brm1 %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  mutate(across(.cols = c(estimate, conf.low, conf.high),
+                .fns = ~ inv.logit(.))) %>% 
+  select(estimate, contains("conf")) 
+  
+
+```
+
+###### Hypothesis 2
+```{r}
+
+# The tendency to thank the individual who prevented the worse potential outcome from occurring will increase with age
+
+fit.brm2 = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
+     data = df.exp1_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm2") 
+
+fit.brm2 %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  filter(term == "age") %>%
+  select(estimate, contains("conf"))
+ 
+```
+
+## ADULTS
+### DATA
+#### Read in data
+
+
+```{r message=FALSE, warning=FALSE}
+
+df.exp1_adults = read_csv("../../data/experiment1/adults/exp1_adults.csv")
+
+```
+
+#### Wrangle 
+
+```{r}
+
+df.exp1_adults = df.exp1_adults %>% 
+  mutate(participant = 1:30) %>% 
+  relocate(participant) %>% 
+  select(-workerid:-post_test_trial, -error) %>% 
+   pivot_longer(cols = c("video_1", "video_2", "video_3", "video_4"
+   ),
+   names_to = "video_version",
+   values_to = "video"
+  ) %>% 
+  pivot_longer(cols = c("video_1_correct_answer", "video_2_correct_answer", "video_3_correct_answer", "video_4_correct_answer"),
+               names_to = "video_version_correct_answer",
+               values_to = "correct_answer") %>% 
+  pivot_longer(cols = c("video_1_response", "video_2_response", "video_3_response", "video_4_response"),
+                names_to = "video_version_response",
+   values_to = "response") %>% 
+  mutate(video_version_correct_answer = str_remove_all(video_version_correct_answer, "_correct_answer"),
+         video_version_response = str_remove_all(video_version_response, "_response")) %>% 
+  filter(video_version == video_version_correct_answer & video_version_correct_answer == video_version_response) %>% 
+  select(participant, scenario = video, correct_answer, response) %>% 
+  mutate(rating = if_else(correct_answer == response, 1, 0))
+
+```
+
+#### Demogrpahics
+
+```{r}
+# read in data
+df.exp1_adults_demographics = read_csv("../../data/experiment1/adults/exp1_adults_demographics.csv")
+
+# print demographics
+print_demographics_adults(df.exp1_adults_demographics)
+
+
+```
+
+### STATS
+#### Bayesian Regression Models
+##### Hypothesis 1 
+```{r}
+
+# Overall adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+# fit.brm1.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
+#      data = df.exp1_adults,
+#      family = "bernoulli",
+#      cores = 4,
+#      file = "cache/brm1.adults") 
+# 
+# fit.brm1.adults %>% 
+#   tidy(effects = c("fixed"),
+#        conf.int = TRUE,
+#        conf.level = 0.95,
+#        conf.method = "HPDinterval") %>% 
+#   mutate(across(.cols = c(estimate, conf.low, conf.high),
+#                 .fns = ~ inv.logit(.))) %>% 
+#   select(estimate, contains("conf")) 
+```
+
+
+### PLOTS
+
+#### Overall 
+
+```{r fig.height=10, fig.width=8, message=FALSE, warning=FALSE}
+
+
+# Load image as grob
+overall_image <- readPNG("../../figures/experiment1/overall_still/experiment1.png")
+overall_grob <- rasterGrob(overall_image, interpolate = TRUE, width = 1, vjust = 0, hjust = 0)
+
+# Create a dataframe with the grob in a column named `image`
+df.image = tibble(
+  x = -Inf,
+  y = Inf,
+  image = list(overall_grob),
+  facet_var = "Experiment 1"
+)
+
+# INDIVIDUAL DATA 
+
+# children
+df.exp1.children.individual = df.exp1_children %>%
+  select(participant, age_group, age, total_score) %>% 
+  distinct() %>% 
+  mutate(pct_correct = total_score / 4) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 1")
+
+# adults
+df.exp1.adults.individual = df.exp1_adults %>%
+  rename(trial_name = scenario) %>%
+  group_by(participant) %>%
+  summarise(
+    total_score = sum(rating),
+    pct_correct = mean(total_score) / 4) %>%
+  ungroup() %>%
+  mutate(age_group = "adults",
+         age = 8) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 1")
+  
+# combine total counterfactual data for adults + children
+df.combined.individual = bind_rows(df.exp1.children.individual,
+                                   df.exp1.adults.individual)
+
+# MEANS 
+df.exp1.combinbed.means = df.combined.individual %>% 
+  group_by(age_group) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(pct_correct)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response) %>% 
+  mutate(facet_var = "Experiment 1")
+
+# plot text showing n for adults + children
+df.exp1.combined.text = df.exp1.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95) %>% 
+  mutate(facet_var = "Experiment 1")
+
+p1 = ggplot() + 
+  geom_hline(yintercept = seq(0, 1, 0.25),
+             linetype = "dotted",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_point(data = df.exp1.children.individual,
+             mapping = aes(x = age,
+                           y = pct_correct,
+                           fill = age,
+                           color = age),
+             shape = 21,
+             size = 2,
+             color = "grey30",
+             alpha = .4) +
+  geom_pointrange(data = df.exp1.combinbed.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.exp1.combinbed.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_text(data = df.exp1.combined.text,
+            mapping = aes(x = age_mean,
+                          y = y,
+                          label = label),
+            size = 6.8,
+            vjust = -1.8) +  
+  geom_custom(data = df.image,
+              mapping = aes(x = x, y = y, data = image),
+              grob_fun = function(x) x) +
+   facet_wrap(~facet_var,
+              nrow = 1) +
+  labs(y = "Percentage of choosing \n the person who prevented \n the worse outcome") +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+  scale_x_continuous(breaks = c(seq(3, 7, 1), 8),
+                     labels = c(seq(3, 7, 1), "adult"), 
+                     expand = expansion(add = c(0.2, 0.5))) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title.y = element_text(size = 25),
+        axis.title.x = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        strip.text = element_text(size = 36,
+                                  vjust = 44.5,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+# ggsave(filename = "../../figures/experiment1/exp1_results.pdf",
+#        width = 8,
+#        height = 10)
+
+
+```
+
+#### Per trial
+
+```{r fig.width=24, fig.height=10, message=FALSE, warning=FALSE}
+df.scenarios = tibble(short_name = c("egg_ball",
+                                     "icecream_sunscreen",
+                                     "vase_bear",
+                                     "phone_duck"),
+                        long_name = c("egg | basketball", 
+                                      "icecream | sunscreen",
+                                      "vase | toybear",
+                                      "phone | rubberducky"))
+
+# load trial images 
+func_load_image = function(scenario){
+  readPNG(str_c("../../figures/experiment1/trial_stills/", scenario, ".png"))
+}
+
+df.plot = df.exp1_children %>% 
+  select(participant, age, age_group, scenario = trial_name, trial_score) %>% 
+  bind_rows(df.exp1_adults %>% 
+              select(participant, scenario, trial_score = rating) %>% 
+              mutate(age_group = "adults",
+                     age = 8) %>% 
+              left_join(df.scenarios,
+                        by = c("scenario" = "short_name")) %>% 
+              select(-scenario) %>% 
+              rename(scenario = long_name))
+
+df.plot.means = df.plot %>% 
+  group_by(age_group, scenario) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(trial_score)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response)
+  
+
+# plot text showing n for adults + children
+df.exp1.combined.text = df.exp1.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95)
+
+# linking images and clips
+df.images = df.plot %>% 
+  select(scenario) %>% 
+  distinct() %>% 
+  mutate(grob = map(.x = scenario, .f = ~ func_load_image(scenario = .x)))
+
+scenario_labels = as_labeller(
+  c("egg | basketball" = "basketball | egg",
+    "icecream | sunscreen" = "ice cream | sunscreen",
+    "vase | toybear" = "bear | vase",
+    "phone | rubberducky" = "phone | duck")
+)
+
+ggplot() + 
+  geom_hline(yintercept = seq(0, 1, 0.25),
+             linetype = "dotted",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_custom(data = df.images,
+              mapping = aes(data = grob,
+                            x = -Inf,
+                            y = Inf),
+              grob_fun = function(x) rasterGrob(x,
+                                                interpolate = T,
+                                                width = 1,
+                                                vjust = 0,
+                                                hjust = 0)) + 
+ facet_wrap(~ scenario,
+             nrow = 1,
+             labeller = scenario_labels) +
+  labs(x = "Age (in years)",
+       y = "Percentage of choosing \n worse outcome prevented") +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+scale_x_continuous(
+  breaks = c(3, 4, 5, 6, 7, 8),
+  labels = c("3", "4", "5", "6", "7", "adult"),
+  limits = c(3, 8), 
+  expand = expansion(add = c(0, 0.5))  
+) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title = element_text(size = 25),
+        axis.title.x = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        panel.spacing.x = unit(2, units = "cm"),
+        strip.text = element_text(size = 32,
+                                  vjust = 39,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+ggsave(filename = "../../figures/experiment1/exp1_results_trials.pdf",
+       width = 24,
+       height = 10)
+```
+
+
+
+# EXPERIMENT 2 
+
+## CHILDREN
+
+### DATA
+
+#### Read in Data
+
+```{r message=FALSE, warning=FALSE}
+
+df.exp2_children = read_csv("../../data/experiment2/children/exp2_children.csv") %>%
+  filter(row_number() >= 0 & row_number() <= 120) %>% 
+  select(age, gender, lan_spoken, trial_1, trial_1_score, trial_2, trial_2_score, trial_3, trial_3_score, trial_4, trial_4_score, trial_5, trial_5_score, trial_6, trial_6_score, total_score) %>%
+  mutate(age_group = cut(age, breaks = c(3, 4, 5, 6, 7.1),
+                         labels = c("3", "4", "5", "6"),
+                         right = TRUE)) %>%
+  na.omit() %>%
+  mutate(participant = 1:n(),
+         total_score = as.numeric(total_score),
+        across("trial_1"|"trial_2"|"trial_3"|"trial_4"|"trial_5"|"trial_6", ~case_when(
+    grepl("lightbulb_laundry_correct_(left|right)_(jessie|caleb)", .) ~ "lightbulb",
+    grepl("apple_trashcan_correct_(left|right)_(lily|alex)", .) ~ "apple",
+    grepl("basketball_egg_correct_(left|right)_(charlie|noah)", .) ~ "basketball",
+    grepl("glass_beanbag_correct_(left|right)_(emily|lucas)", .) ~ "glass",
+    grepl("rock_wine_correct_(left|right)_(amber|billy)", .) ~ "rock",
+    grepl("bear_water_correct_(left|right)_(vicky|connor)", .) ~ "bear",
+    TRUE ~ .
+  ))) %>%
+  mutate(across(starts_with("trial"), as.character)) %>%
+  pivot_longer(cols = c("trial_1", "trial_2", "trial_3", "trial_4", "trial_5", "trial_6"),
+               names_to = "trial_order",
+               values_to = "trial_name") %>%
+  group_by(participant) %>%
+  mutate(trial_score = case_when(
+    trial_order == "trial_1" ~ trial_1_score,
+    trial_order == "trial_2" ~ trial_2_score,
+    trial_order == "trial_3" ~ trial_3_score,
+    trial_order == "trial_4" ~ trial_4_score,
+    trial_order == "trial_5" ~ trial_5_score,
+    trial_order == "trial_6" ~ trial_6_score,
+  )) %>%
+  mutate(trial_score = as.numeric(trial_score)) %>%
+  mutate(trial_order = ifelse(trial_order == "trial_1", "trial 1",
+                               ifelse(trial_order == "trial_2", "trial 2",
+                                      ifelse(trial_order == "trial_3", "trial 3",
+                                             ifelse(trial_order == "trial_4", "trial 4",
+                                                    ifelse(trial_order == "trial_5", "trial 5",
+                                                           ifelse(trial_order == "trial_6", "trial 6", trial_order))))))) %>%
+  mutate(side = case_when(
+    trial_name %in% c("basketball", "bear", "apple", "rock") ~ "side with things",
+    trial_name %in% c("lightbulb", "glass") ~ "side with nothing",
+    TRUE ~ "Uncategorized" 
+  )) %>%
+  mutate(prefer_things = case_when(
+    side == "side with things" & trial_score == 1 ~ 1,
+    side == "side with nothing" & trial_score == 0 ~ 1,
+    TRUE ~ 0
+  )) %>%
+  select(participant, gender, lan_spoken, age, age_group, trial_order, trial_name, trial_score, side, prefer_things, total_score)
+
+```
+
+#### Demographics
+
+```{r}
+print_demographics(df.exp2_children)
+```
+
+### STATS
+
+#### Bayesian Regression Models
+
+##### Hypothesis 1 
+
+```{r message=FALSE, warning=FALSE}
+
+# Overall children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+fit.brm3 = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
+     data = df.exp2_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm3") 
+
+fit.brm3 %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  mutate(across(.cols = c(estimate, conf.low, conf.high),
+                .fns = ~ inv.logit(.))) %>% 
+  select(estimate, contains("conf"))
+
+```
+
+##### Hypothesis 2
+```{r message=FALSE, warning=FALSE}
+
+# The tendency to thank the individual who prevented the worse potential outcome from occurring will increase with age
+
+fit.brm4 = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
+     data = df.exp2_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm4") 
+
+fit.brm4 %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  filter(term == "age") %>%
+  select(estimate, contains("conf")) 
+
+```
+
+## ADULTS
+### DATA
+#### Read in Data
+
+```{r message=FALSE, warning=FALSE}
+
+# import raw data
+df.exp2_adults = read_csv("../../data/experiment2/adults/exp2_adults.csv")
+
+```
+
+#### Wrangle
+```{r}
+df.exp2_adults = df.exp2_adults %>% 
+  mutate(participant = 1:n()) %>% 
+  relocate(participant) %>% 
+  select(-workerid, -error) %>% 
+   pivot_longer(cols = c("video_1", "video_2", "video_3", "video_4", "video_5", "video_6"
+   ),
+   names_to = "video_version",
+   values_to = "video"
+  ) %>% 
+  pivot_longer(cols = c("video_1_correct_answer", "video_2_correct_answer", "video_3_correct_answer", "video_4_correct_answer", "video_5_correct_answer", "video_6_correct_answer"),
+               names_to = "video_version_correct_answer",
+               values_to = "correct_answer") %>% 
+  pivot_longer(cols = c("video_1_response", "video_2_response", "video_3_response", "video_4_response", "video_5_response", "video_6_response"),
+                names_to = "video_version_response",
+   values_to = "response") %>% 
+  mutate(video_version_correct_answer = str_remove_all(video_version_correct_answer, "_correct_answer"),
+         video_version_response = str_remove_all(video_version_response, "_response")) %>% 
+  filter(video_version == video_version_correct_answer & video_version_correct_answer == video_version_response) %>% 
+  mutate(age = "Adult") %>%
+  select(age, participant, scenario = video, correct_answer, response) %>% 
+  mutate(rating = if_else(correct_answer == response, 1, 0)) %>%
+  rename(trial_response = response,
+         response = rating) 
+
+  
+```
+
+#### Demographics
+```{r message=FALSE, warning=FALSE}
+
+df.exp2_adults_demographics = read_csv("../../data/experiment2/adults/exp2_adults_demographics.csv") 
+ 
+
+print_demographics_adults(df.exp2_adults_demographics)
+
+```
+
+### STATS
+#### Bayesian Regression Models
+##### Hypothesis 1 
+```{r}
+
+# Overall adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+fit.brm3.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
+     data = df.exp2_adults ,
+     family = "bernoulli",
+     cores = 4,
+     file = "cache/brm3.adults") 
+
+fit.brm3.adults %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  mutate(across(.cols = c(estimate, conf.low, conf.high),
+                .fns = ~ inv.logit(.))) %>% 
+  select(estimate, contains("conf")) 
+
+```
+
+## PLOTS
+
+#### Overall 
+
+```{r fig.height=10, fig.width=6.65, message=FALSE, warning=FALSE}
+
+
+
+# Load image as grob
+overall_image <- readPNG("../../figures/experiment2/overall_still/experiment2.png")
+overall_grob <- rasterGrob(overall_image, interpolate = TRUE, width = 1, vjust = 0, hjust = 0)
+
+# Create a dataframe with the grob in a column named `image`
+df.image = tibble(
+  x = -Inf,
+  y = Inf,
+  image = list(overall_grob),
+  facet_var = "Experiment 2"
+)
+
+# INDIVIDUAL DATA 
+
+# children
+df.exp2.children.individual = df.exp2_children %>%
+  select(participant, age_group, age, total_score) %>% 
+  distinct() %>% 
+  mutate(pct_correct = total_score / 6) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 2")
+
+# adults
+df.exp2.adults.individual = df.exp2_adults %>%
+  rename(trial_name = scenario) %>%
+  group_by(participant) %>%
+  summarise(
+    total_score = sum(response),
+    pct_correct = mean(total_score) / 6) %>%
+  ungroup() %>%
+  mutate(age_group = "adults",
+         age = 8) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 2")
+  
+# combine total counterfactual data for adults + children
+df.combined.individual = bind_rows(df.exp2.children.individual,
+                                   df.exp2.adults.individual)
+
+# MEANS 
+df.exp2.combinbed.means = df.combined.individual %>% 
+  group_by(age_group) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(pct_correct)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response) %>% 
+  mutate(facet_var = "Experiment 2")
+
+# plot text showing n for adults + children
+df.exp2.combined.text = df.exp2.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           # label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95) %>% 
+  mutate(facet_var = "Experiment 2")
+
+p2 = ggplot() + 
+   geom_hline(yintercept = seq(0, 1, 0.166),
+             linetype = "dotted",
+             color = "black",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_point(data = df.exp2.children.individual,
+             mapping = aes(x = age,
+                           y = pct_correct,
+                           fill = age,
+                           color = age),
+             shape = 21,
+             size = 2,
+             color = "grey30",
+             alpha = .4) +
+  geom_pointrange(data = df.exp2.combinbed.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.exp2.combinbed.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_text(data = df.exp2.combined.text,
+            mapping = aes(x = age_mean,
+                          y = y,
+                          label = label),
+            size = 6.8,
+            vjust = -1.8) +  
+geom_custom(data = df.image,
+              mapping = aes(x = x, y = y, data = image),
+              grob_fun = function(x) x) +
+   facet_wrap(~facet_var,
+              nrow = 1) +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+  scale_x_continuous(breaks = c(seq(3, 7, 1), 8),
+                     labels = c(seq(3, 7, 1), "adult"), 
+                     expand = expansion(add = c(0.2, 0.5))) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        strip.text = element_text(size = 36,
+                                  vjust = 44.5,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+# ggsave(filename = "../../figures/experiment2/exp2_results.pdf",
+#        width = 6.65,
+#        height = 10)
+```
+
+
+#### Per trial
+
+```{r fig.width=24, fig.height=10, message=FALSE, warning=FALSE}
+
+
+df.scenarios = tibble(short_name = c("bear",
+                                     "lightbulb",
+                                     "glass",
+                                     "basketball",
+                                     "apple",
+                                     "rock"))
+
+# load trial images 
+func_load_image = function(scenario){
+  readPNG(str_c("../../figures/experiment2/trial_stills/", scenario, ".png"))
+}
+
+df.plot = df.exp2_children %>% 
+  select(participant, age, age_group, scenario = trial_name, trial_score) %>% 
+  bind_rows(df.exp2_adults %>% 
+              select(participant, scenario, trial_score = response) %>% 
+              mutate(age_group = "adults",
+                     age = 8) %>% 
+              left_join(df.scenarios,
+                        by = c("scenario" = "short_name"))) %>% 
+  ungroup()
+
+df.plot.means = df.plot %>% 
+  group_by(age_group, scenario) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(trial_score)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response)
+  
+
+# plot text showing n for adults + children
+df.exp2.combined.text = df.exp2.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95)
+
+df.images = df.plot %>% 
+  select(scenario) %>% 
+  distinct() %>% 
+  mutate(grob = map(.x = scenario, .f = ~ func_load_image(.x)))
+
+
+scenario_labels = as_labeller(
+  c("bear" = "bears & oilpan",
+    "lightbulb" = "lightbulbs & laundry",
+    "glass" = "glasses & pillow",
+    "basketball" = "basketballs & eggs",
+    "apple" = "apples & trash",
+    "rock" = "rocks & glasses")
+)
+
+ggplot() + 
+   geom_hline(yintercept = seq(0, 1, 0.25),
+             linetype = "dotted",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_custom(data = df.images,
+              mapping = aes(data = grob, x = -Inf, y = Inf),
+              grob_fun = function(x) rasterGrob(x, interpolate = TRUE, width = 1, vjust = 0, hjust = 0)) +
+ facet_wrap(~ scenario,
+             nrow = 1,
+             labeller = scenario_labels) +
+  labs(x = "Age (in years)",
+       y = "Percentage of choosing \n worse outcome prevented") +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+ scale_x_continuous(
+  breaks = c(3, 4, 5, 6, 7, 8),
+  labels = c("3", "4", "5", "6", "7", "adult"),
+  limits = c(3, 8), 
+  expand = expansion(add = c(0, 0.5))  
+) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title = element_text(size = 25),
+        axis.title.x = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        panel.spacing.x = unit(2, units = "cm"),
+        strip.text = element_text(size = 34,
+                                  vjust = 35,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+ggsave(filename = "../../figures/experiment2/exp2_results_trials.pdf",
+       width = 34,
+       height = 10)
+```
+
+
+# EXPERIMENT 3
+## CHILDREN
+### DATA
+#### Read in Data
+
+```{r message=FALSE, warning=FALSE}
+df.exp3_children = read_csv("../../data/experiment3/children/exp3_children.csv")%>%
+  filter(row_number() >= 0 & row_number() <= 240) %>% 
+  select(age, gender, lan_spoken, trial_1, trial_1_score, trial_2, trial_2_score, trial_3, trial_3_score, trial_4, trial_4_score, trial_5, trial_5_score, trial_6, trial_6_score, total_score) %>%
+  mutate(age_group = cut(age, breaks = c(3, 4, 5, 6, 7, 8, 9, 10, 11.1),
+                         labels = c("3", "4", "5", "6", "7", "8", "9", "10"),
+                         right = TRUE)) %>%
+  na.omit() %>%
+  mutate(participant = 1:n(),
+         total_score = as.numeric(total_score),
+        across("trial_1"|"trial_2"|"trial_3"|"trial_4"|"trial_5"|"trial_6", ~case_when(
+    grepl("exp7_bulb_laundry_correct_(left|right)_(jessie|caleb)", .) ~ "lightbulb",
+    grepl("exp7_apple_trashcan_correct_(left|right)_(lily|alex)", .) ~ "apple",
+    grepl("exp7_basketball_egg_correct_(left|right)_(charlie|noah)", .) ~ "basketball",
+    grepl("exp7_glass_beanbag_correct_(left|right)_(emily|lucas)", .) ~ "glass",
+    grepl("exp7_rock_wine_correct_(left|right)_(amber|billy)", .) ~ "rock",
+    grepl("exp7_bear_water_correct_(left|right)_(vicky|connor)", .) ~ "bear",
+    TRUE ~ .
+  ))) %>%
+  mutate(across(starts_with("trial"), as.character)) %>%
+  pivot_longer(cols = c("trial_1", "trial_2", "trial_3", "trial_4", "trial_5", "trial_6"),
+               names_to = "trial_order",
+               values_to = "trial_name") %>%
+  group_by(participant) %>%
+  mutate(trial_score = case_when(
+    trial_order == "trial_1" ~ trial_1_score,
+    trial_order == "trial_2" ~ trial_2_score,
+    trial_order == "trial_3" ~ trial_3_score,
+    trial_order == "trial_4" ~ trial_4_score,
+    trial_order == "trial_5" ~ trial_5_score,
+    trial_order == "trial_6" ~ trial_6_score,
+  )) %>%
+  mutate(trial_score = as.numeric(trial_score)) %>%
+  mutate(trial_order = ifelse(trial_order == "trial_1", "trial 1",
+                               ifelse(trial_order == "trial_2", "trial 2",
+                                      ifelse(trial_order == "trial_3", "trial 3",
+                                             ifelse(trial_order == "trial_4", "trial 4",
+                                                    ifelse(trial_order == "trial_5", "trial 5",
+                                                           ifelse(trial_order == "trial_6", "trial 6", trial_order))))))) %>%
+  mutate(side = case_when(
+    trial_name %in% c("basketball", "bear", "apple", "rock") ~ "side with things",
+    trial_name %in% c("lightbulb", "glass") ~ "side with nothing",
+    TRUE ~ "Uncategorized" 
+  )) %>%
+  mutate(prefer_things = case_when(
+    side == "side with things" & trial_score == 1 ~ 1,
+    side == "side with nothing" & trial_score == 0 ~ 1,
+    TRUE ~ 0
+  )) %>%
+  select(participant, gender, lan_spoken, age, age_group, trial_order, trial_name, trial_score, side, prefer_things, total_score)
+
+```
+
+## Demographics
+```{r message=FALSE, warning=FALSE}
+
+print_demographics(df.exp3_children)
+
+```
+# STATS
+## Bayesian Regression Models
+### Hypothesis 1 
+```{r message=FALSE, warning=FALSE}
+
+# Overall children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+fit.brm5.children = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
+     data = df.exp3_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm5_children") 
+
+fit.brm5.children %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  mutate(across(.cols = c(estimate, conf.low, conf.high),
+                .fns = ~ inv.logit(.))) %>% 
+  select(estimate, contains("conf"))
+
+```
+
+### Hypothesis 2
+```{r message=FALSE, warning=FALSE}
+
+# The tendency to thank the individual who prevented the worse potential outcome from occurring will increase with age
+
+fit.brm5.children.age = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
+     data = df.exp3_children,
+     family = "bernoulli", 
+     cores = 4,
+     file = "cache/brm5_children_age") 
+
+fit.brm5.children.age %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  filter(term == "age") %>%
+  select(estimate, contains("conf")) 
+
+```
+
+## ADULTS
+### DATA
+#### Read in Data
+
+```{r message=FALSE, warning=FALSE}
+
+
+setwd("../../data/experiment3/adults")
+
+file_names = list.files(pattern="*.csv")
+file_names = file_names[!file_names %in% c("m6f0atxjkr_same_participant_as_lhjb5uy11r.csv")]
+all_data = do.call(rbind, lapply(file_names, read.csv)) %>%
+  distinct()
+
+write.csv(all_data, "exp3_adult.csv", row.names = FALSE)
+
+df.exp3_adults = read_csv("exp3_adult.csv")
+
+```
+
+#### Wrangle
+```{r}
+df.exp3_adults = df.exp3_adults %>% 
+  mutate(participant = 1:n()) %>% 
+  relocate(participant) %>% 
+   pivot_longer(cols = c("video_1", "video_2", "video_3", "video_4", "video_5", "video_6"
+   ),
+   names_to = "video_version",
+   values_to = "video"
+  ) %>% 
+  pivot_longer(cols = c("video_1_correct_answer", "video_2_correct_answer", "video_3_correct_answer", "video_4_correct_answer", "video_5_correct_answer", "video_6_correct_answer"),
+               names_to = "video_version_correct_answer",
+               values_to = "correct_answer") %>% 
+  pivot_longer(cols = c("video_1_response", "video_2_response", "video_3_response", "video_4_response", "video_5_response", "video_6_response"),
+                names_to = "video_version_response",
+   values_to = "response") %>% 
+  mutate(video_version_correct_answer = str_remove_all(video_version_correct_answer, "_correct_answer"),
+         video_version_response = str_remove_all(video_version_response, "_response")) %>% 
+  filter(video_version == video_version_correct_answer & video_version_correct_answer == video_version_response) %>% 
+  mutate(age = "Adult") %>%
+  select(age, participant, scenario = video, correct_answer, response, feedback) %>% 
+  mutate(rating = if_else(correct_answer == response, 1, 0)) %>%
+  rename(trial_response = response,
+         response = rating) 
+
+```
+
+
+#### Demographics
+```{r message=FALSE, warning=FALSE}
+
+# read in data
+df.exp3_adults_demographics = read_csv("../../data/experiment3/adults/exp3_adult.csv")
+
+# print demographics
+print_demographics_adults(df.exp3_adults_demographics)
+
+```
+
+### STATS
+#### Bayesian Regression Models
+##### Hypothesis 1 
+```{r message=FALSE, warning=FALSE}
+
+# Overall adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance
+
+fit.brm5.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
+     data = df.exp3_adults,
+     family = "bernoulli",
+     cores = 4,
+     file = "cache/brm5.adults") 
+
+fit.brm5.adults %>% 
+  tidy(effects = c("fixed"),
+       conf.int = TRUE,
+       conf.level = 0.95,
+       conf.method = "HPDinterval") %>% 
+  mutate(across(.cols = c(estimate, conf.low, conf.high),
+                .fns = ~ inv.logit(.))) %>% 
+  select(estimate, contains("conf")) 
+
+```
+## PLOTS
+
+#### Overall
+
+```{r fig.height=10, fig.width=6.7, message=FALSE, warning=FALSE}
+
+# Load image as grob
+overall_image <- readPNG("../../figures/experiment3/overall_still/experiment3.png")
+overall_grob <- rasterGrob(overall_image, interpolate = TRUE, width = 1, vjust = 0, hjust = 0)
+
+# Create a dataframe with the grob in a column named `image`
+df.image = tibble(
+  x = -Inf,
+  y = Inf,
+  image = list(overall_grob),
+  facet_var = "Experiment 3"
+)
+
+
+# INDIVIDUAL DATA 
+
+# children
+df.exp3.children.individual = df.exp3_children %>%
+  select(participant, age_group, age, total_score) %>% 
+  distinct() %>% 
+  mutate(pct_correct = total_score / 6) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 3")
+
+# adults
+df.exp3.adults.individual = df.exp3_adults %>%
+  rename(trial_name = scenario) %>%
+  group_by(participant) %>%
+  summarise(
+    total_score = sum(response),
+    pct_correct = mean(total_score) / 6) %>%
+  ungroup() %>%
+  mutate(age_group = "adults",
+         age = 12) %>% 
+  select(-total_score) %>% 
+  mutate(facet_var = "Experiment 3")
+  
+# combine total counterfactual data for adults + children
+df.combined.individual = bind_rows(df.exp3.children.individual,
+                                   df.exp3.adults.individual)
+
+# MEANS 
+df.exp3.combinbed.means = df.combined.individual %>% 
+  group_by(age_group) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(pct_correct)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response) %>% 
+  mutate(facet_var = "Experiment 3")
+
+# plot text showing n for adults + children
+df.exp3.combined.text = df.exp3.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           # label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95) %>% 
+  mutate(facet_var = "Experiment 3")
+
+p3 = ggplot() + 
+   geom_hline(yintercept = seq(0, 1, 0.166),
+             linetype = "dotted",
+             color = "black",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_point(data = df.exp3.children.individual,
+             mapping = aes(x = age,
+                           y = pct_correct,
+                           fill = age,
+                           color = age),
+             shape = 21,
+             size = 2,
+             color = "grey30",
+             alpha = .4) +
+  geom_pointrange(data = df.exp3.combinbed.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.exp3.combinbed.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_text(data = df.exp3.combined.text,
+            mapping = aes(x = age_mean,
+                          y = y,
+                          label = label),
+            size = 6.8,
+            vjust = -1.8) +  
+  geom_custom(data = df.image,
+              mapping = aes(x = x, y = y, data = image),
+              grob_fun = function(x) x) +
+   facet_wrap(~facet_var,
+              nrow = 1) +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+  scale_x_continuous(breaks = c(seq(3, 11, 1), 12),
+                     labels = c(seq(3, 11, 1), "adult"), 
+                     expand = expansion(add = c(0.2, 0.5))) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        strip.text = element_text(size = 36,
+                                  vjust = 44.5,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+
+# ggsave(filename = "../../figures/experiment3/exp3_results.pdf",
+#        width = 6.7,
+#        height = 10)
+```
+
+
+
+#### Per trial
+
+```{r fig.width=24, fig.height=10, message=FALSE, warning=FALSE}
+
+
+df.scenarios = tibble(short_name = c("bear",
+                                     "lightbulb",
+                                     "glass",
+                                     "basketball",
+                                     "apple",
+                                     "rock"))
+
+# load trial images 
+func_load_image = function(scenario){
+  readPNG(str_c("../../figures/experiment3/trial_stills/", scenario, ".png"))
+}
+
+df.plot = df.exp3_children %>% 
+  select(participant, age, age_group, scenario = trial_name, trial_score) %>% 
+  bind_rows(df.exp3_adults %>% 
+              select(participant, scenario, trial_score = response) %>% 
+              mutate(age_group = "adults",
+                     age = 12) %>% 
+              left_join(df.scenarios,
+                        by = c("scenario" = "short_name"))) %>% 
+  ungroup()
+
+df.plot.means = df.plot %>% 
+  group_by(age_group, scenario) %>% 
+  summarise(
+    n = n(),
+    age_mean = mean(age),
+    response = smean.cl.boot(trial_score)) %>%
+  mutate(index = c("mean", "low", "high")) %>%
+  ungroup() %>% 
+  pivot_wider(names_from = index,
+              values_from = response)
+  
+
+# plot text showing n for adults + children
+df.exp3.combined.text = df.exp3.combinbed.means %>% 
+    select(age_group, age_mean, n) %>% 
+    mutate(label = n,
+           label = ifelse(age_group == "3", str_c("n = ", n), n),
+           y = 0.95)
+
+df.images = df.plot %>% 
+  select(scenario) %>% 
+  distinct() %>% 
+  mutate(grob = map(.x = scenario, .f = ~ func_load_image(.x)))
+
+
+scenario_labels = as_labeller(
+  c("bear" = "bears & oilpan",
+    "lightbulb" = "lightbulbs & laundry",
+    "glass" = "glasses & pillow",
+    "basketball" = "basketballs & eggs",
+    "apple" = "apples & trash",
+    "rock" = "rocks & glasses")
+)
+
+ggplot() + 
+   geom_hline(yintercept = seq(0, 1, 0.25),
+             linetype = "dotted",
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5,
+             linetype = "dashed") +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group != "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high,
+                                fill = age_mean),
+                  shape = 21,
+                  size = 1.5) +
+  geom_pointrange(data = df.plot.means %>%
+                    filter(age_group == "adults"),
+                  mapping = aes(x = age_mean,
+                                y = mean,
+                                ymin = low,
+                                ymax = high),
+                  shape = 23,
+                  fill = "grey",
+                  size = 1.5) +
+  geom_custom(data = df.images,
+              mapping = aes(data = grob, x = -Inf, y = Inf),
+              grob_fun = function(x) rasterGrob(x, interpolate = TRUE, width = 1, vjust = 0, hjust = 0)) +
+ facet_wrap(~ scenario,
+             nrow = 1,
+             labeller = scenario_labels) +
+  labs(x = "Age (in years)",
+       y = "Percentage of choosing \n worse outcome prevented") +
+  coord_cartesian(clip = "off",
+                  ylim = c(0, 1)) +
+  scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%"),
+                     expand = expansion(add = c(0.05, 0.12))) + 
+ scale_x_continuous(
+  breaks = c(3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+  labels = c("3", "4", "5", "6", "7", "8", "9", "10", "11", "adult"),
+  limits = c(3, 12), 
+  expand = expansion(add = c(0, 0.5))  
+) +
+  scale_fill_gradientn(colors = children_palette) + 
+  scale_color_gradientn(colors = children_palette) + 
+  theme(axis.text.x = element_text(size = 25),
+        axis.text.y = element_text(size = 25),
+        axis.title = element_text(size = 25),
+        axis.title.x = element_blank(),
+        strip.background = element_blank(),
+        plot.title = element_blank(),
+        panel.spacing.x = unit(2, units = "cm"),
+        strip.text = element_text(size = 45,
+                                  vjust = 36,
+                                  face = "bold"),
+        legend.position = "none",
+        plot.margin = margin(t = 12,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
+
+ggsave(filename = "../../figures/experiment3/exp3_results_trials.pdf",
+       width = 44,
+       height = 10)
+```
+
+
+# PLOTS
+## Overall Experiment Plots Combined
+
+```{r fig.height=10, fig.width=20, message=FALSE, warning=FALSE}
+
+# Combine the plots horizontally
+combined_plot = p1 + p2 + p3 + plot_layout(ncol = 3)
+
+# # Add title
+# overall_plot = combined_plot + 
+#   plot_annotation(
+#     title = "Who should receive the thank-you sticker?",
+#     theme = theme(
+#       plot.title = element_text(
+#         size = 50,             
+#         face = "bold",         
+#         hjust = 0.5,           
+#         margin = margin(b = 15) 
+#       )
+#     )
+#   )
+
+
+
+ggsave(filename = "../../figures/overall_results.pdf",
+       width = 22,
+       height = 11)
+
+
+```
+
+
+# SESSION INFO
+
+```{r}
+sessionInfo()
+```
