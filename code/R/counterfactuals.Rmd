@@ -936,7 +936,7 @@ df.images = df.plot %>%
 
 
 scenario_labels = as_labeller(
-  c("bear" = "bears & oilpan",
+  c("bear" = "bears & dirty water",
     "lightbulb" = "lightbulbs & laundry",
     "glass" = "glasses & pillow",
     "basketball" = "basketballs & eggs",
@@ -1402,7 +1402,7 @@ df.images = df.plot %>%
 
 
 scenario_labels = as_labeller(
-  c("bear" = "bears & oilpan",
+  c("bear" = "bears & dirty water",
     "lightbulb" = "lightbulbs & laundry",
     "glass" = "glasses & pillow",
     "basketball" = "basketballs & eggs",
