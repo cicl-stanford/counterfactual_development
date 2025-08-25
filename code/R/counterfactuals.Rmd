@@ -390,12 +390,16 @@ p1 = ggplot() +
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
+  labs(title = "A") +
   theme(axis.text.x = element_text(size = 25),
         axis.text.y = element_text(size = 25),
         axis.title.y = element_text(size = 25),
         axis.title.x = element_blank(),
         strip.background = element_blank(),
-        plot.title = element_blank(),
+        plot.title = element_text(size = 70,
+                      face = "bold",
+                      hjust = 0,
+                      vjust = 22),
         strip.text = element_text(size = 36,
                                   vjust = 44.5,
                                   face = "bold"),
@@ -861,12 +865,16 @@ geom_custom(data = df.image,
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
+  labs(title = "B") +
   theme(axis.text.x = element_text(size = 25),
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         strip.background = element_blank(),
-        plot.title = element_blank(),
+        plot.title = element_text(size = 70,
+                      face = "bold",
+                      hjust = 0,
+                      vjust = 22),
         strip.text = element_text(size = 36,
                                   vjust = 44.5,
                                   face = "bold"),
@@ -1325,12 +1333,16 @@ p3 = ggplot() +
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
+  labs(title = "C") +
   theme(axis.text.x = element_text(size = 25),
         axis.text.y = element_blank(),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
         strip.background = element_blank(),
-        plot.title = element_blank(),
+        plot.title = element_text(size = 70,
+                      face = "bold",
+                      hjust = 0,
+                      vjust = 22),
         strip.text = element_text(size = 36,
                                   vjust = 44.5,
                                   face = "bold"),
@@ -1484,27 +1496,12 @@ ggsave(filename = "../../figures/experiment3/exp3_results_trials.pdf",
 ```{r fig.height=10, fig.width=20, message=FALSE, warning=FALSE}
 
 # Combine the plots horizontally
-combined_plot = p1 + p2 + p3 + plot_layout(ncol = 3)
-
-# # Add title
-# overall_plot = combined_plot + 
-#   plot_annotation(
-#     title = "Who should receive the thank-you sticker?",
-#     theme = theme(
-#       plot.title = element_text(
-#         size = 50,             
-#         face = "bold",         
-#         hjust = 0.5,           
-#         margin = margin(b = 15) 
-#       )
-#     )
-#   )
-
-
+combined_plot = p1 + p2 + p3 + 
+  plot_layout(ncol = 3) 
 
 ggsave(filename = "../../figures/overall_results.pdf",
        width = 22,
-       height = 11)
+       height = 12)
 
 
 ```
