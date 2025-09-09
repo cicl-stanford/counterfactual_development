@@ -1373,6 +1373,64 @@ ggplot(df.exp3.age.min, aes(x = age, y = mean)) +
 
 ```
 
+### Above chance performance (younger children only)
+
+```{r message=FALSE, warning=FALSE}
+
+set.seed(1)
+
+df.exp3_children_younger = df.exp3_children %>%
+  filter(age <= 7)
+
+fit.brm7.children.age = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
+                            data = df.exp3_children_younger,
+                            family = "bernoulli", 
+                            cores = 4,
+                            file = "cache/brm7") 
+
+
+# At what age will children younger than 7 perform above chance?
+
+df.exp3_age_grid = tibble(age = seq(min(df.exp3_children_younger$age),
+                                    max(df.exp3_children_younger$age),
+                                    length.out = 200))
+
+# Posterior predictions
+preds = posterior_epred(fit.brm7.children.age, newdata = df.exp3_age_grid, re_formula = NA)
+
+df.exp3.age.min = as_tibble(t(preds)) %>%
+  mutate(age = df.exp3_age_grid$age) %>%
+  pivot_longer(-age, names_to = "draw", values_to = "p") %>%
+  group_by(age) %>%
+  summarise(
+    mean = mean(p),
+    lower = quantile(p, 0.025),
+    upper = quantile(p, 0.975),
+    .groups = "drop"
+  )
+
+cross_age = df.exp3.age.min %>%
+  filter(lower > 0.5) %>%
+  summarise(min_age = min(age)) %>%
+  pull(min_age)
+
+ggplot(df.exp3.age.min, aes(x = age, y = mean)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), 
+              alpha = 0.2, fill = "darkgreen") +
+  geom_line(color = "darkgreen", size = 1) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = cross_age, linetype = "dotted", color = "blue") +
+  annotate("text", x = cross_age, y = 0.52, 
+           label = paste0("Crossing at age ≈ ", round(cross_age, 2)), 
+           color = "blue", hjust = -0.1) +
+  labs(x = "Age", y = "Predicted Probability",
+       title = "Predicted Success Across Age",
+       subtitle = "Shaded area = 95% credible interval; red dashed = chance level") +
+  theme_minimal(base_size = 14)
+
+```
+
+
 ## ADULTS
 
 ### DATA
