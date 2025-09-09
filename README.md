@@ -1,6 +1,6 @@
-# Counterfactual reasoning without counterfactual language
+# Probing counterfactual thinking without counterfactual langauge
 
-This repository contains the experiments, data, analyses, and figures for the paper "Counterfactual reasoning without counterfactual language," by David Rose, Siying Zhang, Hyo Gweon and Tobias Gerstenberg.
+This repository contains the experiments, data, analyses, and figures for the paper "Probing counterfactual thinking without counterfactual langauge," by David Rose, Siying Zhang, Hyo Gweon and Tobias Gerstenberg.
 
 <!-- The preprint can be found [here](update link) -->
 
