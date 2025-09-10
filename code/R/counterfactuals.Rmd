@@ -12,7 +12,7 @@ output:
 ---
 
 # Load packages
-```{r setup, include = F, message = F, warning = F}
+```{r message = F, warning = F}
 
 library("xtable")         # for saving tables
 library("emmeans")        # for comparing means
@@ -37,7 +37,7 @@ library("tidyverse")      # for everything else
 ```{r}
 
 # suppress warnings and messages
-opts_chunk$set(echo = T, warning = F, message = F)
+opts_chunk$set(warning = FALSE, message = FALSE) 
 
 # define a custom color palette
 children_palette = brewer.pal(n = 9, name = "Greens")[-1]
@@ -61,7 +61,7 @@ print_demographics = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarise(n = n_distinct(participant)) %>%
+    summarize(n = n_distinct(participant)) %>%
     print()
   
   # age
@@ -74,7 +74,7 @@ print_demographics = function(data) {
     mutate(en_occurrence = ifelse(str_detect(lan_spoken, "en"), 
                                   "en", "non-en")) %>%
     group_by(en_occurrence) %>%
-    summarise(n = n_distinct(participant)) %>%
+    summarize(n = n_distinct(participant)) %>%
     print()
 }
 
@@ -87,7 +87,7 @@ print_demographics_adults = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarise(n = n()) %>%
+    summarize(n = n()) %>%
     print()
   
   # age
@@ -98,7 +98,7 @@ print_demographics_adults = function(data) {
   # race
   data %>%
     group_by(race) %>%
-    summarise(n = n()) %>%
+    summarize(n = n()) %>%
     print()
 }
 
@@ -146,9 +146,9 @@ fun_plot_above_chance = function(data, cross_age){
 ### DATA
 
 #### Read in Data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp1_children = read_csv("../../data/experiment1/children/exp1_children.csv") 
+df.exp1_children = read_csv("../../data/experiment1/children/exp1_children.csv", show_col_types = F) 
 
 ```
 
@@ -229,12 +229,11 @@ print_demographics(df.exp1_children)
 
 ### STATS
 
-##### Bayesian Regression Models
+#### Hypothesis 1 
 
-###### Hypothesis 1 
+Overall children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance. 
+
 ```{r}
-# Overall children will thank the individual who prevented the worse outcome 
-# from occurring at rates that exceed chance
 
 fit.brm1 = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
                data = df.exp1_children,
@@ -254,11 +253,11 @@ fit.brm1 %>%
 
 ```
 
-###### Hypothesis 2
-```{r}
+#### Hypothesis 2
 
-# The tendency to thank the individual who prevented the worse potential outcome 
-# from occurring will increase with age
+The tendency to thank the individual who prevented the worse potential outcome from occurring will increase with age. 
+
+```{r}
 
 fit.brm2 = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
                data = df.exp1_children,
@@ -276,7 +275,7 @@ fit.brm2 %>%
 
 ```
 
-###### Above chance performance 
+#### Above chance performance 
 ```{r}
 
 # At what age will children perform above chance?
@@ -296,14 +295,14 @@ df.exp1.age.min = as_tibble(t(preds)) %>%
                names_to = "draw",
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp1.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp1.age.min,
@@ -316,9 +315,9 @@ fun_plot_above_chance(data = df.exp1.age.min,
 ### DATA
 
 #### Read in data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp1_adults = read_csv("../../data/experiment1/adults/exp1_adults.csv")
+df.exp1_adults = read_csv("../../data/experiment1/adults/exp1_adults.csv", show_col_types = F)
 
 ```
 
@@ -363,7 +362,7 @@ df.exp1_adults = df.exp1_adults %>%
 ```{r}
 
 # read in data
-df.exp1_adults_demographics = read_csv("../../data/experiment1/adults/exp1_adults_demographics.csv")
+df.exp1_adults_demographics = read_csv("../../data/experiment1/adults/exp1_adults_demographics.csv", show_col_types = F)
 
 # print demographics
 print_demographics_adults(df.exp1_adults_demographics)
@@ -372,15 +371,12 @@ print_demographics_adults(df.exp1_adults_demographics)
 
 ### STATS
 
-#### Bayesian Regression Models
+#### Hypothesis 1 
 
-##### Hypothesis 1 
+Overall, adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance.
+NOTE: Adult performance was at 100%, so this model cannot be fitted. 
 
-Adult performance was at 100%, so this model cannot be fitted. 
 ```{r eval=FALSE}
-
-# Overall adults will thank the individual who prevented the worse outcome from 
-# occurring at rates that exceed chance
 
 fit.brm1.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
      data = df.exp1_adults,
@@ -399,11 +395,11 @@ fit.brm1.adults %>%
 
 ```
 
+## PLOTS
 
-### PLOTS
+### Overall 
 
-#### Overall 
-```{r fig.height=10, fig.width=8, message=FALSE, warning=FALSE}
+```{r, fig.height=12, fig.width=7, warning=FALSE}
 
 set.seed(1)
 
@@ -412,14 +408,13 @@ overall_image = readPNG("../../figures/experiment1/overall_still/experiment1.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = 0, 
+                          vjust = -0.2, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
 df.image = tibble(x = -Inf,
                   y = Inf,
-                  image = list(overall_grob),
-                  facet_var = "Experiment 1")
+                  image = list(overall_grob))
 
 # INDIVIDUAL DATA 
 
@@ -431,20 +426,18 @@ df.exp1.children.individual = df.exp1_children %>%
          total_score) %>% 
   distinct() %>% 
   mutate(pct_correct = total_score / 4) %>% 
-  select(-total_score) %>% 
-  mutate(facet_var = "Experiment 1")
+  select(-total_score)
 
 # adults
 df.exp1.adults.individual = df.exp1_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(total_score = sum(rating),
-    pct_correct = mean(total_score) / 4) %>%
+  summarize(total_score = sum(rating),
+            pct_correct = total_score / 4) %>%
   ungroup() %>%
   mutate(age_group = "adults",
          age = 8) %>% 
-  select(-total_score) %>% 
-  mutate(facet_var = "Experiment 1")
+  select(-total_score)
 
 # combine total counterfactual data for adults + children
 df.combined.individual = bind_rows(df.exp1.children.individual,
@@ -453,14 +446,13 @@ df.combined.individual = bind_rows(df.exp1.children.individual,
 # MEANS 
 df.exp1.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(n = n(),
+  summarize(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(pct_correct)) %>%
   mutate(index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
-              values_from = response) %>% 
-  mutate(facet_var = "Experiment 1")
+              values_from = response)
 
 # plot text showing n for adults + children
 df.exp1.combined.text = df.exp1.combinbed.means %>% 
@@ -471,8 +463,7 @@ df.exp1.combined.text = df.exp1.combinbed.means %>%
          label = ifelse(age_group == "3", 
                         str_c("n = ", n), 
                         n),
-         y = 0.95) %>% 
-  mutate(facet_var = "Experiment 1")
+         y = 0.95)
 
 p1 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -524,50 +515,41 @@ p1 = ggplot() +
             mapping = aes(x = age_mean,
                           y = y,
                           label = label),
-            size = 6.8,
-            vjust = -1.8) +  
+            size = 7,
+            vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
                             data = image),
               grob_fun = function(x) x) +
-  facet_wrap(~facet_var,
-             nrow = 1) +
   labs(y = "Percentage of choosing \n the person who prevented \n the worse outcome") +
   coord_cartesian(clip = "off",
                   ylim = c(0, 1)) +
   scale_y_continuous(breaks = seq(0, 1, 0.25),
                      labels = str_c(seq(0, 1, 0.25) * 100, "%"),
-                     expand = expansion(add = c(0.05, 0.12))) + 
+                     # expand = expansion(add = c(0.05, 0.12))) + 
+                     expand = expansion(add = c(0.05, 0))) + 
   scale_x_continuous(breaks = c(seq(3, 7, 1), 8),
                      labels = c(seq(3, 7, 1), "adult"), 
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
-  labs(title = "A") +
   theme(axis.text.x = element_text(size = 25),
+        axis.title.x = element_blank(),
         axis.text.y = element_text(size = 25),
         axis.title.y = element_text(size = 25),
-        axis.title.x = element_blank(),
-        strip.background = element_blank(),
-        plot.title = element_text(size = 50,
-                                  face = "bold",
-                                  hjust = 0,
-                                  vjust = 30),
-        strip.text = element_text(size = 36,
-                                  vjust = 44.5,
-                                  face = "bold"),
         legend.position = "none",
-        plot.margin = margin(t = 12,
+        plot.margin = margin(t = 11,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
                              unit = "cm"))
 
+p1
 ```
 
-#### Per trial
-```{r fig.width=24, fig.height=10, message=FALSE, warning=FALSE}
+### Per trial
+```{r fig.width=24, fig.height=10}
 
 set.seed(1)
 
@@ -604,7 +586,7 @@ df.plot = df.exp1_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(n = n(),
+  summarize(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(trial_score)) %>%
   mutate(index = c("mean", "low", "high")) %>%
@@ -717,9 +699,9 @@ ggsave(filename = "../../figures/experiment1/exp1_results_trials.pdf",
 ### DATA
 
 #### Read in Data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp2_children = read_csv("../../data/experiment2/children/exp2_children.csv") 
+df.exp2_children = read_csv("../../data/experiment2/children/exp2_children.csv", show_col_types = F) 
 
 ```
 
@@ -812,15 +794,11 @@ print_demographics(df.exp2_children)
 
 ### STATS
 
-#### Bayesian Regression Models
+#### Hypothesis 1 
 
-##### Hypothesis 1 
-```{r message=FALSE, warning=FALSE}
+Overall, children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance.
 
-set.seed(1)
-
-# Overall children will thank the individual who prevented the worse outcome 
-# from occurring at rates that exceed chance
+```{r}
 
 fit.brm3 = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
                data = df.exp2_children,
@@ -839,8 +817,8 @@ fit.brm3 %>%
 
 ```
 
-##### Hypothesis 2
-```{r message=FALSE, warning=FALSE}
+#### Hypothesis 2
+```{r}
 
 set.seed(1)
 
@@ -864,7 +842,7 @@ fit.brm4 %>%
 ```
 
 ##### Above chance performance 
-```{r message=FALSE, warning=FALSE}
+```{r}
 
 # At what age will children perform above chance?
 
@@ -883,14 +861,14 @@ df.exp2.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp2.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp2.age.min,
@@ -903,9 +881,9 @@ fun_plot_above_chance(data = df.exp2.age.min,
 ### DATA
 
 #### Read in Data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp2_adults = read_csv("../../data/experiment2/adults/exp2_adults.csv")
+df.exp2_adults = read_csv("../../data/experiment2/adults/exp2_adults.csv", show_col_types = F)
 
 ```
 
@@ -956,9 +934,9 @@ df.exp2_adults = df.exp2_adults %>%
 ```
 
 #### Demographics
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp2_adults_demographics = read_csv("../../data/experiment2/adults/exp2_adults_demographics.csv") 
+df.exp2_adults_demographics = read_csv("../../data/experiment2/adults/exp2_adults_demographics.csv", show_col_types = F) 
 
 print_demographics_adults(df.exp2_adults_demographics)
 
@@ -966,15 +944,11 @@ print_demographics_adults(df.exp2_adults_demographics)
 
 ### STATS
 
-#### Bayesian Regression Models
+#### Hypothesis 1 
 
-##### Hypothesis 1 
+Overall, adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance.
+
 ```{r}
-
-set.seed(1)
-
-# Overall adults will thank the individual who prevented the worse outcome from
-# occurring at rates that exceed chance
 
 fit.brm3.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
                       data = df.exp2_adults ,
@@ -995,8 +969,9 @@ fit.brm3.adults %>%
 
 ## PLOTS
 
-#### Overall 
-```{r fig.height=10, fig.width=6.65, message=FALSE, warning=FALSE}
+### Overall 
+
+```{r fig.height=12, fig.width=6}
 
 set.seed(1)
 
@@ -1005,7 +980,7 @@ overall_image = readPNG("../../figures/experiment2/overall_still/experiment2.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = 0, 
+                          vjust = -0.2, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
@@ -1031,14 +1006,12 @@ df.exp2.children.individual = df.exp2_children %>%
 df.exp2.adults.individual = df.exp2_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(
-    total_score = sum(response),
-    pct_correct = mean(total_score) / 6) %>%
+  summarize(total_score = sum(response),
+            pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
          age = 8) %>% 
-  select(-total_score) %>% 
-  mutate(facet_var = "Experiment 2")
+  select(-total_score)
 
 # combine total counterfactual data for adults + children
 df.combined.individual = bind_rows(df.exp2.children.individual,
@@ -1047,22 +1020,20 @@ df.combined.individual = bind_rows(df.exp2.children.individual,
 # MEANS 
 df.exp2.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(
+  summarize(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(pct_correct)) %>%
   mutate(index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
-              values_from = response) %>% 
-  mutate(facet_var = "Experiment 2")
+              values_from = response)
 
 # plot text showing n for adults + children
 df.exp2.combined.text = df.exp2.combinbed.means %>% 
   select(age_group, age_mean, n) %>% 
   mutate(label = n,
-         y = 0.95) %>% 
-  mutate(facet_var = "Experiment 2")
+         y = 0.95)
 
 p2 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1114,49 +1085,40 @@ p2 = ggplot() +
             mapping = aes(x = age_mean,
                           y = y,
                           label = label),
-            size = 6.8,
-            vjust = -1.8) +  
+            size = 7,
+            vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
                             data = image),
               grob_fun = function(x) x) +
-  facet_wrap(~facet_var,
-             nrow = 1) +
   coord_cartesian(clip = "off",
                   ylim = c(0, 1)) +
   scale_y_continuous(breaks = seq(0, 1, 0.25),
                      labels = str_c(seq(0, 1, 0.25) * 100, "%"),
-                     expand = expansion(add = c(0.05, 0.12))) + 
+                     expand = expansion(add = c(0.05, 0))) + 
   scale_x_continuous(breaks = c(seq(3, 7, 1), 8),
                      labels = c(seq(3, 7, 1), "adult"), 
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
-  labs(title = "B") +
   theme(axis.text.x = element_text(size = 25),
-        axis.text.y = element_blank(),
         axis.title.x = element_blank(),
+        axis.text.y = element_blank(),
         axis.title.y = element_blank(),
-        strip.background = element_blank(),
-        plot.title = element_text(size = 50,
-                                  face = "bold",
-                                  hjust = 0,
-                                  vjust = 30),
-        strip.text = element_text(size = 36,
-                                  vjust = 44.5,
-                                  face = "bold"),
         legend.position = "none",
-        plot.margin = margin(t = 12,
+        plot.margin = margin(t = 15,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
                              unit = "cm"))
 
+p2
 ```
 
-#### Per trial
-```{r fig.width=33, fig.height=10, message=FALSE, warning=FALSE}
+
+### Per trial
+```{r fig.width=33, fig.height=10}
 
 set.seed(1)
 
@@ -1190,7 +1152,7 @@ df.plot = df.exp2_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(
+  summarize(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(trial_score)) %>%
@@ -1302,14 +1264,14 @@ ggsave(filename = "../../figures/experiment2/exp2_results_trials.pdf",
 ### DATA
 
 #### Read in Data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-df.exp3_children = read_csv("../../data/experiment3/children/exp3_children.csv")
+df.exp3_children = read_csv("../../data/experiment3/children/exp3_children.csv", show_col_types = F)
 
 ```
 
 #### Wrangle
-```{r message=FALSE, warning=FALSE}
+```{r}
 
 df.exp3_children = df.exp3_children %>%
   filter(row_number() >= 0 & row_number() <= 240) %>% 
@@ -1388,23 +1350,20 @@ df.exp3_children = df.exp3_children %>%
 ```
 
 
-## Demographics
-```{r message=FALSE, warning=FALSE}
+#### Demographics
+```{r}
 
 print_demographics(df.exp3_children)
 
 ```
-# STATS
 
-## Bayesian Regression Models
+### STATS
 
-### Hypothesis 1 
-```{r message=FALSE, warning=FALSE}
+#### Hypothesis 1 
 
-set.seed(1)
+Overall, children will thank the individual who prevented the worse outcome from occurring at rates that exceed chance. 
 
-# Overall children will thank the individual who prevented the worse outcome 
-# from occurring at rates that exceed chance
+```{r}
 
 fit.brm5.children = brm(formula = trial_score ~ 1 + (1 | participant) + (1 | trial_name),
                         data = df.exp3_children,
@@ -1423,13 +1382,11 @@ fit.brm5.children %>%
 
 ```
 
-### Hypothesis 2
-```{r message=FALSE, warning=FALSE}
+#### Hypothesis 2
 
-set.seed(1)
+The tendency to thank the individual who prevented the worse potential outcome from occurring will increase with age.
 
-# The tendency to thank the individual who prevented the worse potential outcome
-# from occurring will increase with age
+```{r}
 
 fit.brm5.children.age = brm(formula = trial_score ~ 1 + age + (1 | participant) + (1 | trial_name),
                             data = df.exp3_children,
@@ -1447,10 +1404,11 @@ fit.brm5.children.age %>%
 
 ```
 
-### Above chance performance 
-```{r message=FALSE, warning=FALSE}
+#### Above chance performance (all children)
 
-# At what age will children perform above chance?
+At what age will children perform above chance?
+
+```{r}
 
 df.exp3_age_grid = tibble(age = seq(min(df.exp3_children$age),
                                     max(df.exp3_children$age),
@@ -1467,14 +1425,14 @@ df.exp3.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min,
@@ -1482,8 +1440,11 @@ fun_plot_above_chance(data = df.exp3.age.min,
 
 ```
 
-### Above chance performance (younger children only)
-```{r message=FALSE, warning=FALSE}
+#### Above chance performance (younger children only)
+
+At what age will children perform above chance?
+
+```{r}
 
 df.exp3_children_younger = df.exp3_children %>%
   filter(age <= 7)
@@ -1512,49 +1473,50 @@ df.exp3.age.min.restricted = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min.restricted,
-                    cross_age = cross_age)
+                      cross_age = cross_age)
 
 ```
-
 
 ## ADULTS
 
 ### DATA
 
 #### Read in Data
-```{r message=FALSE, warning=FALSE}
+```{r}
 
-setwd("../../data/experiment3/adults")
+file_names = list.files(path = "../../data/experiment3/adults/",
+                        pattern = "*.csv")
 
-file_names = list.files(pattern="*.csv")
-file_names = file_names[!file_names %in% c("m6f0atxjkr_same_participant_as_lhjb5uy11r.csv")]
-all_data = do.call(rbind, 
-                   lapply(file_names, read.csv)) %>%
-  distinct()
+df.exp3_adults = map_dfr(.x = file_names,
+                         .f = ~ read_csv(str_c("../../data/experiment3/adults/", .x),
+                                         show_col_types = F),
+                         .id = "participant")
 
-write.csv(all_data, "exp3_adult.csv", row.names = FALSE)
+```
 
-df.exp3_adults = read_csv("exp3_adult.csv")
+#### Demographics
+```{r}
+
+print_demographics_adults(df.exp3_adults)
 
 ```
 
 #### Wrangle
 ```{r}
 
-df.exp3_adults = df.exp3_adults %>% 
-  mutate(participant = 1:n()) %>% 
-  relocate(participant) %>% 
+df.exp3_adults = df.exp3_adults %>%
+  mutate(participant = as.numeric(participant)) %>% 
   pivot_longer(cols = c("video_1", 
                         "video_2", 
                         "video_3", 
@@ -1595,29 +1557,13 @@ df.exp3_adults = df.exp3_adults %>%
 
 ```
 
-
-#### Demographics
-```{r message=FALSE, warning=FALSE}
-
-# read in data
-df.exp3_adults_demographics = read_csv("../../data/experiment3/adults/exp3_adult.csv")
-
-# print demographics
-print_demographics_adults(df.exp3_adults_demographics)
-
-```
-
 ### STATS
 
-#### Bayesian Regression Models
+#### Hypothesis 1 
 
-##### Hypothesis 1 
-```{r message=FALSE, warning=FALSE}
+Overall adults will thank the individual who prevented the worse outcome from occurring at rates that exceed chance. 
 
-set.seed(1)
-
-# Overall adults will thank the individual who prevented the worse outcome from
-# occurring at rates that exceed chance
+```{r}
 
 fit.brm5.adults = brm(formula = response ~ 1 + (1 | participant) + (1 | scenario),
                       data = df.exp3_adults,
@@ -1638,8 +1584,9 @@ fit.brm5.adults %>%
 
 ## PLOTS
 
-#### Overall
-```{r fig.height=10, fig.width=6.7, message=FALSE, warning=FALSE}
+### Overall
+
+```{r fig.height=12, fig.width=9}
 
 set.seed(1)
 
@@ -1648,14 +1595,13 @@ overall_image = readPNG("../../figures/experiment3/overall_still/experiment3.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = 0, 
+                          vjust = -0.2, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
 df.image = tibble(x = -Inf,
                   y = Inf,
-                  image = list(overall_grob),
-                  facet_var = "Experiment 3")
+                  image = list(overall_grob))
 
 # INDIVIDUAL DATA 
 
@@ -1667,20 +1613,18 @@ df.exp3.children.individual = df.exp3_children %>%
          total_score) %>% 
   distinct() %>% 
   mutate(pct_correct = total_score / 6) %>% 
-  select(-total_score) %>% 
-  mutate(facet_var = "Experiment 3")
+  select(-total_score)
 
 # adults
 df.exp3.adults.individual = df.exp3_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(total_score = sum(response),
-            pct_correct = mean(total_score) / 6) %>%
+  summarize(total_score = sum(response),
+            pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
          age = 12) %>% 
-  select(-total_score) %>% 
-  mutate(facet_var = "Experiment 3")
+  select(-total_score)
 
 # combine total counterfactual data for adults + children
 df.combined.individual = bind_rows(df.exp3.children.individual,
@@ -1689,22 +1633,20 @@ df.combined.individual = bind_rows(df.exp3.children.individual,
 # MEANS 
 df.exp3.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(
+  summarize(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(pct_correct)) %>%
   mutate(index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
-              values_from = response) %>% 
-  mutate(facet_var = "Experiment 3")
+              values_from = response)
 
 # plot text showing n for adults + children
 df.exp3.combined.text = df.exp3.combinbed.means %>% 
   select(age_group, age_mean, n) %>% 
   mutate(label = n,
-         y = 0.95) %>% 
-  mutate(facet_var = "Experiment 3")
+         y = 0.95)
 
 p3 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1756,49 +1698,39 @@ p3 = ggplot() +
             mapping = aes(x = age_mean,
                           y = y,
                           label = label),
-            size = 6.8,
-            vjust = -1.8) +  
+            size = 7,
+            vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
                             data = image),
               grob_fun = function(x) x) +
-  facet_wrap(~facet_var,
-             nrow = 1) +
   coord_cartesian(clip = "off",
                   ylim = c(0, 1)) +
   scale_y_continuous(breaks = seq(0, 1, 0.25),
                      labels = str_c(seq(0, 1, 0.25) * 100, "%"),
-                     expand = expansion(add = c(0.05, 0.12))) + 
+                     expand = expansion(add = c(0.05, 0))) + 
   scale_x_continuous(breaks = c(seq(3, 11, 1), 12),
                      labels = c(seq(3, 11, 1), "adult"), 
                      expand = expansion(add = c(0.2, 0.5))) +
   scale_fill_gradientn(colors = children_palette) + 
   scale_color_gradientn(colors = children_palette) + 
-  labs(title = "C") +
   theme(axis.text.x = element_text(size = 25),
-        axis.text.y = element_blank(),
         axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        strip.background = element_blank(),
-        plot.title = element_text(size = 50,
-                                  face = "bold",
-                                  hjust = 0,
-                                  vjust = 30),
-        strip.text = element_text(size = 36,
-                                  vjust = 44.5,
-                                  face = "bold"),
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),,
         legend.position = "none",
-        plot.margin = margin(t = 12,
+        plot.margin = margin(t = 22,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
                              unit = "cm"))
 
+p3
 ```
 
-#### Per trial
-```{r fig.width=43, fig.height=10, message=FALSE, warning=FALSE}
+### Per trial
+```{r fig.width=44, fig.height=10}
 
 set.seed(1)
 
@@ -1832,7 +1764,7 @@ df.plot = df.exp3_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(n = n(),
+  summarize(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(trial_score)) %>%
   mutate(index = c("mean", "low", "high")) %>%
@@ -1939,21 +1871,32 @@ ggsave(filename = "../../figures/experiment3/exp3_results_trials.pdf",
 
 ```
 
-# PLOTS
+# COMBINED
 
-## Overall Experiment Plots Combined
-```{r fig.height=13, fig.width=21.5, message=FALSE, warning=FALSE}
+## PLOTS 
+```{r fig.height=12, fig.width=20}
 
 # Combine the plots horizontally
-combined_plot = p1 + p2 + p3 + 
-  plot_layout(ncol = 3) 
 
-combined_plot
+p1x = p1 + labs(title = "A          Experiment 1")
+p2x = p2 + labs(title = "B          Experiment 2")
+p3x = p3 + labs(title = "C          Experiment 3")
+
+p1x + p2x + p3x +
+  plot_layout(ncol = 3) &
+  theme(plot.title = element_text(size = 30,
+                                  face = "bold",
+                                  vjust = 58,
+                                  hjust = 0),
+        plot.margin = margin(t = 7,
+                             l = 0.5,
+                             r = 0.5,
+                             b = 0.5,
+                             unit = "cm"))
 
 ggsave(filename = "../../figures/overall_results.pdf",
-       width = 22,
+       width = 20,
        height = 12)
-
 ```
 
 
