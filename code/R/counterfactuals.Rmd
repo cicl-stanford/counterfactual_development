@@ -61,7 +61,7 @@ print_demographics = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarize(n = n_distinct(participant)) %>%
+    summarise(n = n_distinct(participant)) %>%
     print()
   
   # age
@@ -74,7 +74,7 @@ print_demographics = function(data) {
     mutate(en_occurrence = ifelse(str_detect(lan_spoken, "en"), 
                                   "en", "non-en")) %>%
     group_by(en_occurrence) %>%
-    summarize(n = n_distinct(participant)) %>%
+    summarise(n = n_distinct(participant)) %>%
     print()
 }
 
@@ -87,7 +87,7 @@ print_demographics_adults = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarize(n = n()) %>%
+    summarise(n = n()) %>%
     print()
   
   # age
@@ -98,7 +98,7 @@ print_demographics_adults = function(data) {
   # race
   data %>%
     group_by(race) %>%
-    summarize(n = n()) %>%
+    summarise(n = n()) %>%
     print()
 }
 
@@ -295,14 +295,14 @@ df.exp1.age.min = as_tibble(t(preds)) %>%
                names_to = "draw",
                values_to = "p") %>%
   group_by(age) %>%
-  summarize(mean = mean(p),
+  summarise(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp1.age.min %>%
   filter(lower > 0.5) %>%
-  summarize(min_age = min(age)) %>%
+  summarise(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp1.age.min,
@@ -408,7 +408,7 @@ overall_image = readPNG("../../figures/experiment1/overall_still/experiment1.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = -0.2, 
+                          vjust = -0.1, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
@@ -432,7 +432,7 @@ df.exp1.children.individual = df.exp1_children %>%
 df.exp1.adults.individual = df.exp1_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarize(total_score = sum(rating),
+  summarise(total_score = sum(rating),
             pct_correct = total_score / 4) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -446,7 +446,7 @@ df.combined.individual = bind_rows(df.exp1.children.individual,
 # MEANS 
 df.exp1.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarize(n = n(),
+  summarise(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(pct_correct)) %>%
   mutate(index = c("mean", "low", "high")) %>%
@@ -455,15 +455,15 @@ df.exp1.combinbed.means = df.combined.individual %>%
               values_from = response)
 
 # plot text showing n for adults + children
-df.exp1.combined.text = df.exp1.combinbed.means %>% 
-  select(age_group, 
-         age_mean,
-         n) %>% 
-  mutate(label = n,
-         label = ifelse(age_group == "3", 
-                        str_c("n = ", n), 
-                        n),
-         y = 0.95)
+# df.exp1.combined.text = df.exp1.combinbed.means %>% 
+#   select(age_group, 
+#          age_mean,
+#          n) %>% 
+#   mutate(label = n,
+#          label = ifelse(age_group == "3", 
+#                         str_c("n = ", n), 
+#                         n),
+#          y = 0.95)
 
 p1 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -511,12 +511,12 @@ p1 = ggplot() +
                   shape = 23,
                   fill = "grey",
                   size = 1.5) +
-  geom_text(data = df.exp1.combined.text,
-            mapping = aes(x = age_mean,
-                          y = y,
-                          label = label),
-            size = 7,
-            vjust = -3) +  
+  # geom_text(data = df.exp1.combined.text,
+  #           mapping = aes(x = age_mean,
+  #                         y = y,
+  #                         label = label),
+  #           size = 7,
+  #           vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
@@ -586,7 +586,7 @@ df.plot = df.exp1_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarize(n = n(),
+  summarise(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(trial_score)) %>%
   mutate(index = c("mean", "low", "high")) %>%
@@ -861,14 +861,14 @@ df.exp2.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarize(mean = mean(p),
+  summarise(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp2.age.min %>%
   filter(lower > 0.5) %>%
-  summarize(min_age = min(age)) %>%
+  summarise(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp2.age.min,
@@ -980,7 +980,7 @@ overall_image = readPNG("../../figures/experiment2/overall_still/experiment2.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = -0.2, 
+                          vjust = -0.1, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
@@ -1006,7 +1006,7 @@ df.exp2.children.individual = df.exp2_children %>%
 df.exp2.adults.individual = df.exp2_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarize(total_score = sum(response),
+  summarise(total_score = sum(response),
             pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -1020,7 +1020,7 @@ df.combined.individual = bind_rows(df.exp2.children.individual,
 # MEANS 
 df.exp2.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarize(
+  summarise(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(pct_correct)) %>%
@@ -1030,10 +1030,10 @@ df.exp2.combinbed.means = df.combined.individual %>%
               values_from = response)
 
 # plot text showing n for adults + children
-df.exp2.combined.text = df.exp2.combinbed.means %>% 
-  select(age_group, age_mean, n) %>% 
-  mutate(label = n,
-         y = 0.95)
+# df.exp2.combined.text = df.exp2.combinbed.means %>% 
+#   select(age_group, age_mean, n) %>% 
+#   mutate(label = n,
+#          y = 0.95)
 
 p2 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1081,12 +1081,12 @@ p2 = ggplot() +
                   shape = 23,
                   fill = "grey",
                   size = 1.5) +
-  geom_text(data = df.exp2.combined.text,
-            mapping = aes(x = age_mean,
-                          y = y,
-                          label = label),
-            size = 7,
-            vjust = -3) +  
+  # geom_text(data = df.exp2.combined.text,
+  #           mapping = aes(x = age_mean,
+  #                         y = y,
+  #                         label = label),
+  #           size = 7,
+  #           vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
@@ -1152,7 +1152,7 @@ df.plot = df.exp2_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarize(
+  summarise(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(trial_score)) %>%
@@ -1425,14 +1425,14 @@ df.exp3.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarize(mean = mean(p),
+  summarise(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarize(min_age = min(age)) %>%
+  summarise(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min,
@@ -1473,14 +1473,14 @@ df.exp3.age.min.restricted = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarize(mean = mean(p),
+  summarise(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarize(min_age = min(age)) %>%
+  summarise(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min.restricted,
@@ -1595,7 +1595,7 @@ overall_image = readPNG("../../figures/experiment3/overall_still/experiment3.png
 overall_grob = rasterGrob(overall_image, 
                           interpolate = TRUE, 
                           width = 1, 
-                          vjust = -0.2, 
+                          vjust = -0.1, 
                           hjust = 0)
 
 # Create a dataframe with the grob in a column named `image`
@@ -1619,7 +1619,7 @@ df.exp3.children.individual = df.exp3_children %>%
 df.exp3.adults.individual = df.exp3_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarize(total_score = sum(response),
+  summarise(total_score = sum(response),
             pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -1633,7 +1633,7 @@ df.combined.individual = bind_rows(df.exp3.children.individual,
 # MEANS 
 df.exp3.combinbed.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarize(
+  summarise(
     n = n(),
     age_mean = mean(age),
     response = smean.cl.boot(pct_correct)) %>%
@@ -1643,10 +1643,10 @@ df.exp3.combinbed.means = df.combined.individual %>%
               values_from = response)
 
 # plot text showing n for adults + children
-df.exp3.combined.text = df.exp3.combinbed.means %>% 
-  select(age_group, age_mean, n) %>% 
-  mutate(label = n,
-         y = 0.95)
+# df.exp3.combined.text = df.exp3.combinbed.means %>% 
+#   select(age_group, age_mean, n) %>% 
+#   mutate(label = n,
+#          y = 0.95)
 
 p3 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1694,12 +1694,12 @@ p3 = ggplot() +
                   shape = 23,
                   fill = "grey",
                   size = 1.5) +
-  geom_text(data = df.exp3.combined.text,
-            mapping = aes(x = age_mean,
-                          y = y,
-                          label = label),
-            size = 7,
-            vjust = -3) +  
+  # geom_text(data = df.exp3.combined.text,
+  #           mapping = aes(x = age_mean,
+  #                         y = y,
+  #                         label = label),
+  #           size = 7,
+  #           vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
@@ -1764,7 +1764,7 @@ df.plot = df.exp3_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarize(n = n(),
+  summarise(n = n(),
             age_mean = mean(age),
             response = smean.cl.boot(trial_score)) %>%
   mutate(index = c("mean", "low", "high")) %>%
@@ -1886,7 +1886,7 @@ p1x + p2x + p3x +
   plot_layout(ncol = 3) &
   theme(plot.title = element_text(size = 30,
                                   face = "bold",
-                                  vjust = 58,
+                                  vjust = 52,
                                   hjust = 0),
         plot.margin = margin(t = 7,
                              l = 0.5,
