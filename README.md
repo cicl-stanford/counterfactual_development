@@ -1,6 +1,6 @@
 # Probing counterfactual thinking without counterfactual langauge
 
-This repository contains the experiments, data, analyses, and figures for the paper "Probing counterfactual thinking without counterfactual langauge," by David Rose, Siying Zhang, Hyo Gweon and Tobias Gerstenberg.
+This repository contains the experiments, data, analyses, and figures for the paper "Probing counterfactual thinking without counterfactual langauge," by David Rose, Siying Zhang, Sophie Bridgers, Hyowon Gweon and Tobias Gerstenberg.
 
 <!-- The preprint can be found [here](update link) -->
 
@@ -30,6 +30,7 @@ between. We suggest that this is, in part, due to relying on counterfactual lang
 │   │   ├── ...
 ├── data
 │   ├── experiment1
+│   ├── experiment1_appendix
 │   ├── experiment2
 │   └── experiment3
 ├── docs
@@ -38,6 +39,7 @@ between. We suggest that this is, in part, due to relying on counterfactual lang
 │   └── experiment3
 ├── figures
 │   ├── experiment1
+│   ├── experiment1_appendix
 │   ├── experiment2
 │   └── experiment3
 
@@ -49,6 +51,8 @@ between. We suggest that this is, in part, due to relying on counterfactual lang
 	- `experiment1` 
 		- adults ([pre-registration](https://osf.io/yqvfz)) 
 		- children ([pre-registration](https://osf.io/sdbx7)) 
+	- `experiment1_appendix` 
+		- children ([pre-registration](https://osf.io/v49te)) 
 	- `experiment2` 
 		- adults ([pre-registration](https://osf.io/ytjsp)) 
 		- children ([pre-registration](https://osf.io/r52dt))
