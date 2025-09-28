@@ -444,7 +444,7 @@ df.combined.individual = bind_rows(df.exp1.children.individual,
                                    df.exp1.adults.individual)
 
 # MEANS 
-df.exp1.combinbed.means = df.combined.individual %>% 
+df.exp1.combined.means = df.combined.individual %>% 
   group_by(age_group) %>% 
   summarise(n = n(),
             age_mean = mean(age),
@@ -493,7 +493,7 @@ p1 = ggplot() +
              size = 2,
              color = "grey30",
              alpha = .4) +
-  geom_pointrange(data = df.exp1.combinbed.means %>%
+  geom_pointrange(data = df.exp1.combined.means %>%
                     filter(age_group != "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -502,7 +502,7 @@ p1 = ggplot() +
                                 fill = age_mean),
                   shape = 21,
                   size = 1.5) +
-  geom_pointrange(data = df.exp1.combinbed.means %>%
+  geom_pointrange(data = df.exp1.combined.means %>%
                     filter(age_group == "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -1631,7 +1631,7 @@ df.combined.individual = bind_rows(df.exp3.children.individual,
                                    df.exp3.adults.individual)
 
 # MEANS 
-df.exp3.combinbed.means = df.combined.individual %>% 
+df.exp3.combined.means = df.combined.individual %>% 
   group_by(age_group) %>% 
   summarise(
     n = n(),
@@ -1676,7 +1676,7 @@ p3 = ggplot() +
              size = 2,
              color = "grey30",
              alpha = .4) +
-  geom_pointrange(data = df.exp3.combinbed.means %>%
+  geom_pointrange(data = df.exp3.combined.means %>%
                     filter(age_group != "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -1898,7 +1898,241 @@ ggsave(filename = "../../figures/overall_results.pdf",
        width = 20,
        height = 12)
 ```
+# APPENDIX
 
+# EXPERIMENT 1 (What children like and what Granny likes)
+
+# DATA
+
+## Read in Data
+```{r message=FALSE, warning=FALSE}
+
+df.exp1_appendix = read_csv("../../data/experiment1_appendix/exp1_appendix_children.csv")
+
+```
+
+## Wrangle
+```{r message=FALSE, warning=FALSE}
+
+df.exp1_appendix = df.exp1_appendix %>% 
+  filter(row_number() >= 0 & row_number() <= 120) %>% 
+  select(order, 
+         age, 
+         gender, 
+         lan_spoken, 
+         trial_1, 
+         trial_1_score, 
+         trial_2, 
+         trial_2_score, 
+         trial_3, 
+         trial_3_score, 
+         trial_4, 
+         trial_4_score, 
+         trial_1_to_4_total_score, 
+         trial_5, 
+         trial_5_score, 
+         trial_6, 
+         trial_6_score, 
+         trial_7, 
+         trial_7_score, 
+         trial_8, 
+         trial_8_score, 
+         trial_5_to_8_total_score) %>%
+  mutate(age_group = cut(age, breaks = c(3, 4, 5, 6, 7.1),
+                         labels = c("3", "4", "5", "6"),
+                         right = TRUE)) %>%
+  mutate(participant = 1:n(),
+         child_total = as.numeric(trial_1_to_4_total_score),
+         granny_total = as.numeric(trial_5_to_8_total_score),
+         across("trial_1"|"trial_2"|"trial_3"|"trial_4"|"trial_5"|"trial_6"|"trial_7"|"trial_8", ~case_when(
+           grepl("(order1|order2)_(egg|basketball)_(left|right)_(egg|basketball)_(left|right)_granny", .) ~ "egg | basketball",
+           grepl("(order1|order2)_(phone|duck)_(left|right)_(phone|duck)_(left|right)_granny", .) ~ "phone | ducky",
+           grepl("(order1|order2)_(vase|bear)_(left|right)_(vase|bear)_(left|right)_granny", .) ~ "vase | bear",
+           grepl("(order1|order2)_(icecream|sunscreen)_(left|right)_(icecream|sunscreen)_(left|right)_granny", .) ~ "icecream | sunscreen",
+           grepl("(order1|order2)_(egg|basketball)_(left|right)_(egg|basketball)_(left|right)", .) ~ "egg | basketball",
+           grepl("(order1|order2)_(phone|duck)_(left|right)_(phone|duck)_(left|right)", .) ~ "phone | ducky",
+           grepl("(order1|order2)_(vase|bear)_(left|right)_(vase|bear)_(left|right)", .) ~ "vase | bear",
+           grepl("(order1|order2)_(icecream|sunscreen)_(left|right)_(icecream|sunscreen)_(left|right)", .) ~ "icecream | sunscreen",
+           TRUE ~ .
+         ))) %>%
+  mutate(across(starts_with("trial"), 
+                as.character)) %>%
+  pivot_longer(cols = c("trial_1", 
+                        "trial_2", 
+                        "trial_3", 
+                        "trial_4", 
+                        "trial_5", 
+                        "trial_6", 
+                        "trial_7", 
+                        "trial_8"),
+               names_to = "trial_order",
+               values_to = "trial_name") %>%
+  group_by(participant) %>%
+  mutate(trial_score = case_when(
+    trial_order == "trial_1" ~ trial_1_score,
+    trial_order == "trial_2" ~ trial_2_score,
+    trial_order == "trial_3" ~ trial_3_score,
+    trial_order == "trial_4" ~ trial_4_score,
+    trial_order == "trial_5" ~ trial_5_score,
+    trial_order == "trial_6" ~ trial_6_score,
+    trial_order == "trial_7" ~ trial_7_score,
+    trial_order == "trial_8" ~ trial_8_score,
+  )) %>%
+  mutate(trial_score = as.numeric(trial_score)) %>%
+  mutate(trial_order = paste("trial", str_extract(trial_order, "\\d+"), 
+                             sep = " ")) %>%
+  mutate(section = case_when(
+    (order == 1 & trial_order %in% c("trial 1", 
+                                     "trial 2", 
+                                     "trial 3", 
+                                     "trial 4")) ~ "child_preference",
+    (order == 1 & trial_order %in% c("trial 5", 
+                                     "trial 6", 
+                                     "trial 7", 
+                                     "trial 8")) ~ "granny_preference",
+    (order == 2 & trial_order %in% c("trial 1", 
+                                     "trial 2", 
+                                     "trial 3", 
+                                     "trial 4")) ~ "granny_preference",
+    (order == 2 & trial_order %in% c("trial 5", 
+                                     "trial 6", 
+                                     "trial 7", 
+                                     "trial 8")) ~ "child_preference",
+    TRUE ~ NA_character_
+  )) %>% 
+  mutate(trial_order_sectional = case_when(
+    trial_order == "trial 1" ~ "trial 1",
+    trial_order == "trial 2" ~ "trial 2",
+    trial_order == "trial 3" ~ "trial 3",
+    trial_order == "trial 4" ~ "trial 4",
+    trial_order == "trial 5" ~ "trial 1",
+    trial_order == "trial 6" ~ "trial 2",
+    trial_order == "trial 7" ~ "trial 3",
+    trial_order == "trial 8" ~ "trial 4",
+    TRUE ~ trial_order 
+  )) %>%
+  select(order, 
+         participant, 
+         gender, 
+         lan_spoken, 
+         age, 
+         age_group, 
+         trial_order, 
+         trial_order_sectional, 
+         trial_name, 
+         trial_score, 
+         section, 
+         child_total, 
+         granny_total)
+
+```
+  
+  
+
+## Demographics
+```{r}
+
+print_demographics(df.exp1_appendix)
+
+```
+
+# PLOTS
+
+## Overall
+
+```{r}
+
+set.seed(1)
+
+df.exp1_children_original = df.exp1_children %>%
+  mutate(trial_order_sectional = trial_order,
+         order = 0,
+         section = "counterfactual") %>%
+  select(order, 
+         participant, 
+         gender, 
+         lan_spoken, 
+         age, 
+         age_group, 
+         trial_order, 
+         trial_order_sectional, 
+         trial_name, 
+         trial_score, 
+         section, 
+         total_score) %>%
+  rename(test_total = total_score) 
+
+
+df.combined = bind_rows(df.exp1_children_original, df.exp1_appendix) %>%
+  mutate(section_total = case_when(
+    section == "counterfactual" ~ test_total,
+    section == "child_preference" ~ child_total,
+    section == "granny_preference" ~ granny_total,
+    TRUE ~ NA_real_),
+    section = factor(section, levels = c("counterfactual",
+                                         "child_preference",
+                                         "granny_preference")),
+    age_num = as.numeric(as.character(age_group)),
+    pct = section_total / 4) %>%
+  select(-test_total, 
+         -child_total, 
+         -granny_total) 
+
+
+ggplot(df.combined, aes(x = age_group, 
+                        y = pct, 
+                        fill = age_num, 
+                        color = age_num)) +
+  geom_point(position = position_jitterdodge(dodge.width = 0.8,
+                                             jitter.width = 0.5,
+                                             jitter.height = 0),
+             shape = 21,
+             size = .8,
+             color = "grey30",
+             alpha = .5) +
+  stat_summary(fun.data = "mean_cl_boot",
+               position = position_dodge(width = 0.8),
+               shape = 21, 
+               color = "black", 
+               size = .7) +
+  geom_hline(yintercept = seq(0, 1, 0.25), 
+             linetype = "dotted", 
+             alpha = 0.8) +
+  geom_hline(yintercept = 0.5, 
+             linetype = "dashed") +
+  scale_fill_gradientn(colors = children_palette) +
+  scale_color_gradientn(colors = children_palette) +
+ scale_y_continuous(breaks = seq(0, 1, 0.25),
+                     labels = str_c(seq(0, 1, 0.25) * 100, "%")) +
+  labs(y = "Percentage of choosing \n the person who \n prevented the worse outcome",
+       x = "Age (in years)") +
+  theme(text = element_text(size = 16),
+    axis.text.y = element_text(),
+    axis.ticks.y = element_blank(),
+    legend.position = "none",
+    panel.background = element_rect(fill = "white"),
+    strip.text = element_text(size = 11, 
+                              face = "bold"),
+    strip.text.x = element_text(margin = margin(b = 3, 
+                                                t = 3)),
+    plot.margin = margin(t = 0.8,
+                         l = 0.5, 
+                         r = 1, 
+                         b = 0.1, 
+                         unit = "cm"),
+    strip.text.y = element_text()
+  ) +
+  facet_wrap(~ section, nrow = 1,
+             labeller = labeller(section = c(
+               "counterfactual"   = "Who should Granny thank? \nExperiment 1",
+               "child_preference" = "Which object do you like?",
+               "granny_preference"= "Which object does Granny like?"
+             )))
+
+
+ggsave("../../figures/experiment1_appendix/experiment1_appendix.pdf",  width = 10, height = 4)
+
+```
 
 # SESSION INFO
 ```{r}
