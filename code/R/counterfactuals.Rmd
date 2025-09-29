@@ -467,8 +467,8 @@ df.exp1.combined.means = df.combined.individual %>%
 
 p1 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_ribbon(data = df.exp1.age.min,
@@ -620,8 +620,8 @@ scenario_labels = as_labeller(
 
 ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_pointrange(data = df.plot.means %>%
@@ -1037,8 +1037,8 @@ df.exp2.combinbed.means = df.combined.individual %>%
 
 p2 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_ribbon(data = df.exp2.age.min,
@@ -1184,8 +1184,8 @@ scenario_labels = as_labeller(
 
 ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_pointrange(data = df.plot.means %>%
@@ -1650,8 +1650,8 @@ df.exp3.combined.means = df.combined.individual %>%
 
 p3 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_ribbon(data = df.exp3.age.min,
@@ -1799,8 +1799,8 @@ scenario_labels = as_labeller(
 
 ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
-             linetype = "dotted",
-             alpha = 0.8) +
+             linetype = "solid",
+             alpha = 0.1) +
   geom_hline(yintercept = 0.5,
              linetype = "dashed") +
   geom_pointrange(data = df.plot.means %>%
@@ -2083,6 +2083,11 @@ ggplot(df.combined, aes(x = age_group,
                         y = pct, 
                         fill = age_num, 
                         color = age_num)) +
+  geom_hline(yintercept = seq(0, 1, 0.25),
+             linetype = "solid",
+             alpha = 0.1)  +
+  geom_hline(yintercept = 0.5, 
+             linetype = "dashed") +
   geom_point(position = position_jitterdodge(dodge.width = 0.8,
                                              jitter.width = 0.5,
                                              jitter.height = 0),
@@ -2095,16 +2100,11 @@ ggplot(df.combined, aes(x = age_group,
                shape = 21, 
                color = "black", 
                size = .7) +
-  geom_hline(yintercept = seq(0, 1, 0.25), 
-             linetype = "dotted", 
-             alpha = 0.8) +
-  geom_hline(yintercept = 0.5, 
-             linetype = "dashed") +
   scale_fill_gradientn(colors = children_palette) +
   scale_color_gradientn(colors = children_palette) +
  scale_y_continuous(breaks = seq(0, 1, 0.25),
                      labels = str_c(seq(0, 1, 0.25) * 100, "%")) +
-  labs(y = "Percentage of choosing \n the person who \n prevented the worse outcome",
+  labs(y = "Percentage of choosing \n the person who prevented \n the worse outcome",
        x = "Age (in years)") +
   theme(text = element_text(size = 16),
     axis.text.y = element_text(),
