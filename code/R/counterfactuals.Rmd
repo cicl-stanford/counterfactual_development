@@ -36,9 +36,6 @@ library("tidyverse")      # for everything else
 # Settings
 ```{r}
 
-# suppress warnings and messages
-opts_chunk$set(warning = FALSE, message = FALSE) 
-
 # define a custom color palette
 children_palette = brewer.pal(n = 9, name = "Greens")[-1]
 adults_palette = "grey"
@@ -48,7 +45,7 @@ colors = c(children_palette, adults_palette)
 theme_set(theme_classic())
 
 # suppress grouping warning 
-options(dplyr.summarise.inform = F)
+options(dplyr.summarize.inform = F)
 
 ```
 
@@ -61,7 +58,7 @@ print_demographics = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarise(n = n_distinct(participant)) %>%
+    summarize(n = n_distinct(participant)) %>%
     print()
   
   # age
@@ -74,7 +71,7 @@ print_demographics = function(data) {
     mutate(en_occurrence = ifelse(str_detect(lan_spoken, "en"), 
                                   "en", "non-en")) %>%
     group_by(en_occurrence) %>%
-    summarise(n = n_distinct(participant)) %>%
+    summarize(n = n_distinct(participant)) %>%
     print()
 }
 
@@ -87,7 +84,7 @@ print_demographics_adults = function(data) {
   # gender
   data %>%
     group_by(gender) %>%
-    summarise(n = n()) %>%
+    summarize(n = n()) %>%
     print()
   
   # age
@@ -98,7 +95,7 @@ print_demographics_adults = function(data) {
   # race
   data %>%
     group_by(race) %>%
-    summarise(n = n()) %>%
+    summarize(n = n()) %>%
     print()
 }
 
@@ -116,7 +113,7 @@ fun_plot_above_chance = function(data, cross_age){
                 alpha = 0.2, 
                 fill = "darkgreen") +
     geom_line(color = "darkgreen",
-              size = 1) +
+              linewidth = 1) +
     geom_hline(yintercept = 0.5,
                linetype = "dashed",
                color = "red") +
@@ -295,14 +292,14 @@ df.exp1.age.min = as_tibble(t(preds)) %>%
                names_to = "draw",
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp1.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp1.age.min,
@@ -395,9 +392,9 @@ fit.brm1.adults %>%
 
 ```
 
-## PLOTS
+### PLOTS
 
-### Overall 
+#### Overall 
 
 ```{r, fig.height=12, fig.width=7, warning=FALSE}
 
@@ -432,7 +429,7 @@ df.exp1.children.individual = df.exp1_children %>%
 df.exp1.adults.individual = df.exp1_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(total_score = sum(rating),
+  summarize(total_score = sum(rating),
             pct_correct = total_score / 4) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -446,24 +443,13 @@ df.combined.individual = bind_rows(df.exp1.children.individual,
 # MEANS 
 df.exp1.combined.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(n = n(),
-            age_mean = mean(age),
-            response = smean.cl.boot(pct_correct)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(pct_correct),
+          index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
               values_from = response)
-
-# plot text showing n for adults + children
-# df.exp1.combined.text = df.exp1.combinbed.means %>% 
-#   select(age_group, 
-#          age_mean,
-#          n) %>% 
-#   mutate(label = n,
-#          label = ifelse(age_group == "3", 
-#                         str_c("n = ", n), 
-#                         n),
-#          y = 0.95)
 
 p1 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -483,7 +469,7 @@ p1 = ggplot() +
                 y = mean),
             inherit.aes = FALSE,
             color = "darkgreen", 
-            size = 1) +
+            linewidth = 1) +
   geom_point(data = df.exp1.children.individual,
              mapping = aes(x = age,
                            y = pct_correct,
@@ -511,12 +497,6 @@ p1 = ggplot() +
                   shape = 23,
                   fill = "grey",
                   size = 1.5) +
-  # geom_text(data = df.exp1.combined.text,
-  #           mapping = aes(x = age_mean,
-  #                         y = y,
-  #                         label = label),
-  #           size = 7,
-  #           vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
@@ -527,7 +507,6 @@ p1 = ggplot() +
                   ylim = c(0, 1)) +
   scale_y_continuous(breaks = seq(0, 1, 0.25),
                      labels = str_c(seq(0, 1, 0.25) * 100, "%"),
-                     # expand = expansion(add = c(0.05, 0.12))) + 
                      expand = expansion(add = c(0.05, 0))) + 
   scale_x_continuous(breaks = c(seq(3, 7, 1), 8),
                      labels = c(seq(3, 7, 1), "adult"), 
@@ -548,7 +527,7 @@ p1 = ggplot() +
 p1
 ```
 
-### Per trial
+#### Per trial
 ```{r fig.width=24, fig.height=10}
 
 set.seed(1)
@@ -586,24 +565,13 @@ df.plot = df.exp1_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(n = n(),
-            age_mean = mean(age),
-            response = smean.cl.boot(trial_score)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(trial_score),
+          index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
               values_from = response)
-
-# plot text showing n for adults + children
-df.exp1.combined.text = df.exp1.combinbed.means %>% 
-  select(age_group, 
-         age_mean, 
-         n) %>% 
-  mutate(label = n,
-         label = ifelse(age_group == "3", 
-                        str_c("n = ", n), 
-                        n),
-         y = 0.95)
 
 # linking images and clips
 df.images = df.plot %>% 
@@ -678,7 +646,7 @@ ggplot() +
                                   vjust = 39,
                                   face = "bold"),
         legend.position = "none",
-        plot.margin = margin(t = 12,
+        plot.margin = margin(t = 10,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
@@ -861,14 +829,14 @@ df.exp2.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp2.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp2.age.min,
@@ -967,9 +935,9 @@ fit.brm3.adults %>%
 
 ```
 
-## PLOTS
+### PLOTS
 
-### Overall 
+#### Overall 
 
 ```{r fig.height=12, fig.width=6}
 
@@ -1006,7 +974,7 @@ df.exp2.children.individual = df.exp2_children %>%
 df.exp2.adults.individual = df.exp2_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(total_score = sum(response),
+  summarize(total_score = sum(response),
             pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -1018,22 +986,15 @@ df.combined.individual = bind_rows(df.exp2.children.individual,
                                    df.exp2.adults.individual)
 
 # MEANS 
-df.exp2.combinbed.means = df.combined.individual %>% 
+df.exp2.combined.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(
-    n = n(),
-    age_mean = mean(age),
-    response = smean.cl.boot(pct_correct)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
-  ungroup() %>% 
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(pct_correct),
+          index = c("mean", "low", "high")) %>%
+  ungroup() %>%
   pivot_wider(names_from = index,
               values_from = response)
-
-# plot text showing n for adults + children
-# df.exp2.combined.text = df.exp2.combinbed.means %>% 
-#   select(age_group, age_mean, n) %>% 
-#   mutate(label = n,
-#          y = 0.95)
 
 p2 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1053,7 +1014,7 @@ p2 = ggplot() +
                 y = mean),
             inherit.aes = FALSE,
             color = "darkgreen", 
-            size = 1) +
+            linewidth = 1) +
   geom_point(data = df.exp2.children.individual,
              mapping = aes(x = age,
                            y = pct_correct,
@@ -1063,7 +1024,7 @@ p2 = ggplot() +
              size = 2,
              color = "grey30",
              alpha = .4) +
-  geom_pointrange(data = df.exp2.combinbed.means %>%
+  geom_pointrange(data = df.exp2.combined.means %>%
                     filter(age_group != "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -1072,7 +1033,7 @@ p2 = ggplot() +
                                 fill = age_mean),
                   shape = 21,
                   size = 1.5) +
-  geom_pointrange(data = df.exp2.combinbed.means %>%
+  geom_pointrange(data = df.exp2.combined.means %>%
                     filter(age_group == "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -1117,7 +1078,7 @@ p2
 ```
 
 
-### Per trial
+#### Per trial
 ```{r fig.width=33, fig.height=10}
 
 set.seed(1)
@@ -1152,17 +1113,16 @@ df.plot = df.exp2_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(
-    n = n(),
-    age_mean = mean(age),
-    response = smean.cl.boot(trial_score)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(trial_score),
+          index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
               values_from = response)
 
 # plot text showing n for adults + children
-df.exp2.combined.text = df.exp2.combinbed.means %>% 
+df.exp2.combined.text = df.exp2.combined.means %>% 
   select(age_group, age_mean, n) %>% 
   mutate(label = n,
          label = ifelse(age_group == "3", str_c("n = ", n), n),
@@ -1244,7 +1204,7 @@ ggplot() +
                                   vjust = 35,
                                   face = "bold"),
         legend.position = "none",
-        plot.margin = margin(t = 12,
+        plot.margin = margin(t = 10,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
@@ -1425,14 +1385,14 @@ df.exp3.age.min = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min,
@@ -1473,14 +1433,14 @@ df.exp3.age.min.restricted = as_tibble(t(preds)) %>%
                names_to = "draw", 
                values_to = "p") %>%
   group_by(age) %>%
-  summarise(mean = mean(p),
+  summarize(mean = mean(p),
             lower = quantile(p, 0.025),
             upper = quantile(p, 0.975),
             .groups = "drop")
 
 cross_age = df.exp3.age.min %>%
   filter(lower > 0.5) %>%
-  summarise(min_age = min(age)) %>%
+  summarize(min_age = min(age)) %>%
   pull(min_age)
 
 fun_plot_above_chance(data = df.exp3.age.min.restricted,
@@ -1582,9 +1542,9 @@ fit.brm5.adults %>%
 
 ```
 
-## PLOTS
+### PLOTS
 
-### Overall
+#### Overall
 
 ```{r fig.height=12, fig.width=9}
 
@@ -1619,7 +1579,7 @@ df.exp3.children.individual = df.exp3_children %>%
 df.exp3.adults.individual = df.exp3_adults %>%
   rename(trial_name = scenario) %>%
   group_by(participant) %>%
-  summarise(total_score = sum(response),
+  summarize(total_score = sum(response),
             pct_correct = total_score / 6) %>%
   ungroup() %>%
   mutate(age_group = "adults",
@@ -1633,20 +1593,13 @@ df.combined.individual = bind_rows(df.exp3.children.individual,
 # MEANS 
 df.exp3.combined.means = df.combined.individual %>% 
   group_by(age_group) %>% 
-  summarise(
-    n = n(),
-    age_mean = mean(age),
-    response = smean.cl.boot(pct_correct)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
-  ungroup() %>% 
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(pct_correct),
+          index = c("mean", "low", "high")) %>%
+  ungroup() %>%
   pivot_wider(names_from = index,
               values_from = response)
-
-# plot text showing n for adults + children
-# df.exp3.combined.text = df.exp3.combinbed.means %>% 
-#   select(age_group, age_mean, n) %>% 
-#   mutate(label = n,
-#          y = 0.95)
 
 p3 = ggplot() + 
   geom_hline(yintercept = seq(0, 1, 0.25),
@@ -1666,7 +1619,7 @@ p3 = ggplot() +
                 y = mean),
             inherit.aes = FALSE,
             color = "darkgreen", 
-            size = 1) +
+            linewidth = 1) +
   geom_point(data = df.exp3.children.individual,
              mapping = aes(x = age,
                            y = pct_correct,
@@ -1685,7 +1638,7 @@ p3 = ggplot() +
                                 fill = age_mean),
                   shape = 21,
                   size = 1.5) +
-  geom_pointrange(data = df.exp3.combinbed.means %>%
+  geom_pointrange(data = df.exp3.combined.means %>%
                     filter(age_group == "adults"),
                   mapping = aes(x = age_mean,
                                 y = mean,
@@ -1694,12 +1647,6 @@ p3 = ggplot() +
                   shape = 23,
                   fill = "grey",
                   size = 1.5) +
-  # geom_text(data = df.exp3.combined.text,
-  #           mapping = aes(x = age_mean,
-  #                         y = y,
-  #                         label = label),
-  #           size = 7,
-  #           vjust = -3) +  
   geom_custom(data = df.image,
               mapping = aes(x = x, 
                             y = y, 
@@ -1729,7 +1676,7 @@ p3 = ggplot() +
 p3
 ```
 
-### Per trial
+#### Per trial
 ```{r fig.width=44, fig.height=10}
 
 set.seed(1)
@@ -1764,24 +1711,13 @@ df.plot = df.exp3_children %>%
 
 df.plot.means = df.plot %>% 
   group_by(age_group, scenario) %>% 
-  summarise(n = n(),
-            age_mean = mean(age),
-            response = smean.cl.boot(trial_score)) %>%
-  mutate(index = c("mean", "low", "high")) %>%
+  reframe(n = n(),
+          age_mean = mean(age),
+          response = smean.cl.boot(trial_score),
+          index = c("mean", "low", "high")) %>%
   ungroup() %>% 
   pivot_wider(names_from = index,
               values_from = response)
-
-# plot text showing n for adults + children
-df.exp3.combined.text = df.exp3.combinbed.means %>% 
-  select(age_group, 
-         age_mean, 
-         n) %>% 
-  mutate(label = n,
-         label = ifelse(age_group == "3", 
-                        str_c("n = ", n), 
-                        n),
-         y = 0.95)
 
 df.images = df.plot %>% 
   select(scenario) %>% 
@@ -1859,7 +1795,7 @@ ggplot() +
                                   vjust = 36,
                                   face = "bold"),
         legend.position = "none",
-        plot.margin = margin(t = 12.2,
+        plot.margin = margin(t = 13,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
@@ -1888,7 +1824,7 @@ p1x + p2x + p3x +
                                   face = "bold",
                                   vjust = 52,
                                   hjust = 0),
-        plot.margin = margin(t = 7,
+        plot.margin = margin(t = 6.2,
                              l = 0.5,
                              r = 0.5,
                              b = 0.5,
@@ -1900,18 +1836,18 @@ ggsave(filename = "../../figures/overall_results.pdf",
 ```
 # APPENDIX
 
-# EXPERIMENT 1 (What children like and what Granny likes)
+## EXPERIMENT 1 (What children like and what Granny likes)
 
-# DATA
+### DATA
 
-## Read in Data
+#### Read in Data
 ```{r message=FALSE, warning=FALSE}
 
 df.exp1_appendix = read_csv("../../data/experiment1_appendix/exp1_appendix_children.csv")
 
 ```
 
-## Wrangle
+#### Wrangle
 ```{r message=FALSE, warning=FALSE}
 
 df.exp1_appendix = df.exp1_appendix %>% 
@@ -2027,18 +1963,14 @@ df.exp1_appendix = df.exp1_appendix %>%
 
 ```
   
-  
-
-## Demographics
+#### Demographics
 ```{r}
 
 print_demographics(df.exp1_appendix)
 
 ```
 
-# PLOTS
-
-## Overall
+### PLOTS
 
 ```{r}
 

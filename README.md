@@ -5,12 +5,13 @@ This repository contains the experiments, data, analyses, and figures for the pa
 <!-- The preprint can be found [here](update link) -->
 
 __Contents__:
-- [Introduction](#Introduction)
-- [Repository structure](#Repository-structure)
+- [Probing counterfactual thinking without counterfactual langauge](#probing-counterfactual-thinking-without-counterfactual-langauge)
+	- [Introduction](#introduction)
+	- [Repository structure](#repository-structure)
 
 ## Introduction
 
-<img src="figures/storyboard.png" width="100%" align="center">
+<img src="figures/diagrams/storyboard.png" width="100%" align="center">
 
 <br clear="left" />
 <br clear="right" />
