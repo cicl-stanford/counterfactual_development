@@ -16,9 +16,7 @@ __Contents__:
 <br clear="left" />
 <br clear="right" />
 
-Counterfactual reasoning--reasoning about what did not happen, but might have--is a fundamental cognitive capacity. The development of counterfactual reasoning is linked to, among other things, understanding causation, pretense, rules, and mental states. Estimates of when
-children’s capacity for counterfactual thinking develops range from as early as 2 to as late as 12 and virtually everywhere
-between. We suggest that this is, in part, due to relying on counterfactual language to proper counterfactual thinking. We develop a paradigm for probing counterfactual thinking that doesn't rely on counterfactual language, and that can distinguish hypothetical from counterfactual reasoning. Using this paradigm, we find, in Experiment 1, that three-year old children can engage in hypothetical reasoning. Building on our paradigm, we find in Experiment 2, that by around 6, children show signs of engaging in counterfactual reasoning. Nothing that this might be explained by children instead engaging in hypothetical reasoning, we extend our paradigm in Experiment 3, to develop a more stringent test. We find that around 6, children engage in counterfactual reasoning. Our findings suggest that the capacity to engage in counterfactual reasoning may build on the capacity to engage in hypothetical reasoning.  
+Counterfactual thinking---thinking about how things could have gone differently---is a fundamental cognitive capacity that underlies many aspects of our everyday lives; it allows us to learn from past mistakes, evaluate our own and others' actions, and imagine a world beyond the here and now. Yet, prior work has yielded a strikingly wide developmental window for the onset of counterfactual thinking: as early as 2, and as late as 12. There are at least two reasons for this: reliance on counterfactual language (which can underestimate children's competence), and a failure to distinguish counterfactual thinking from hypothetical thinking (which can overestimate children's competence). The current work presents a novel paradigm for probing genuine counterfactual thinking that does not require counterfactual language. After watching a scenario where Granny drops two items that are caught by two different characters, participants are asked which of the two characters Granny should thank. Across three experiments that implement different versions of the task to rule out alternative accounts, we find that the capacity for genuine counterfactual thinking may be present by around age 5, while younger children may succeed on tasks that can be solved via hypothetical thinking. By offering an intuitive and practical method for assessing counterfactual thinking without counterfactual language, the current work opens up a range of empirical questions about the interplay between the development of counterfactual thinking and other cognitive capacities.
 
 
 ## Repository structure
@@ -39,11 +37,11 @@ between. We suggest that this is, in part, due to relying on counterfactual lang
 │   ├── experiment2
 │   └── experiment3
 ├── figures
+│   ├── diagrams
 │   ├── experiment1
 │   ├── experiment1_appendix
 │   ├── experiment2
-│   ├── experiment3
-│   └── paper
+│   └── experiment3
 
 
 ```
