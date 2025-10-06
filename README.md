@@ -67,3 +67,22 @@ Counterfactual thinking - thinking about how things could have gone differently 
 	- [experiment2](https://davdrose.github.io/counterfactuals_dev//experiment2/index.html),
 	- [experiment3](https://davdrose.github.io/counterfactuals_dev//experiment3/index.html)
 - `figures/` contains all the figures from the paper (generated using the script in `code/R/`). 
+
+## CRediT
+
+| Term                       	| David Rose 	| Siying Zhang 	| Sophie Bridgers 	| Hyo Gweon 	| Tobias Gerstenberg 	|
+|----------------------------	|------------	|--------------	|-----------------	|-----------	|--------------------	|
+| Conceptualization          	| x          	| x            	| x               	| x         	| x                  	|
+| Methodology                	| x          	| x            	| x               	| x         	| x                  	|
+| Software                   	| x          	| x            	|                 	|           	| x                  	|
+| Validation                 	| x          	|              	|                 	|           	| x                  	|
+| Formal analysis            	| x          	|              	|                 	|           	|                    	|
+| Investigation              	| x          	| x            	|                 	|           	|                    	|
+| Resources                  	| x          	| x            	|                 	|           	|                    	|
+| Data Curation              	| x          	| x            	|                 	|           	|                    	|
+| Writing - Original Draft   	| x          	|              	|                 	|           	|                    	|
+| Writing - Review & Editing 	| x          	|              	|                 	| x         	| x                  	|
+| Visualization              	| x          	| x            	|                 	|           	| x                  	|
+| Supervision                	| x          	|              	|                 	| x         	| x                  	|
+| Project administration     	| x          	|              	|                 	| x         	| x                  	|
+| Funding acquisition        	|            	|              	|                 	|           	| x                  	|
