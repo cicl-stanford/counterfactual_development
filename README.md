@@ -1,13 +1,14 @@
-# Probing counterfactual thinking without counterfactual langauge
+# Probing counterfactual thinking without counterfactual language
 
-This repository contains the experiments, data, analyses, and figures for the paper "Probing counterfactual thinking without counterfactual langauge," by David Rose, Siying Zhang, Sophie Bridgers, Hyowon Gweon and Tobias Gerstenberg.
+This repository contains the experiments, data, analyses, and figures for the paper "Probing counterfactual thinking without counterfactual language," by David Rose, Siying Zhang, Sophie Bridgers, Hyowon Gweon and Tobias Gerstenberg.
 
 <!-- The preprint can be found [here](update link) -->
 
 __Contents__:
-- [Probing counterfactual thinking without counterfactual langauge](#probing-counterfactual-thinking-without-counterfactual-langauge)
+- [Probing counterfactual thinking without counterfactual language](#probing-counterfactual-thinking-without-counterfactual-language)
 	- [Introduction](#introduction)
 	- [Repository structure](#repository-structure)
+ 	- [CRediT](#credit)
 
 ## Introduction
 
