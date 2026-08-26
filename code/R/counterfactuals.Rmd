@@ -307,6 +307,18 @@ fun_plot_above_chance(data = df.exp1.age.min,
 
 ```
 
+#### Post-test trial
+
+```{r}
+
+df.exp1_children %>%
+  distinct(participant, control_trial_score) %>%
+  summarize(n = n(),
+    n_correct = sum(control_trial_score == 1, na.rm = TRUE),
+    percent_correct = mean(control_trial_score == 1, na.rm = TRUE) * 100)
+
+```
+
 ## ADULTS
 
 ### DATA
